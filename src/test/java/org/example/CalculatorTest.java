@@ -1,17 +1,14 @@
 package org.example;
 
 import org.testng.SkipException;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
 
-public class CalculatorTest {
+public class CalculatorTest extends BaseClass {
     Calculator calculator;
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeClass(alwaysRun = true)
     public void setup() {
         calculator = new Calculator();
 
@@ -30,24 +27,24 @@ public class CalculatorTest {
         };
     }
 
-    @Test(description = "This test checks a valid sum.", groups = "validTests", priority = 0, dataProvider = "sumData")
+    @Test(description = "This test checks a valid sum.", groups = "validTests", priority = -1, dataProvider = "sumData")
     public void checkValidSum(int n1, int n2, int sum) {
         assertEquals(calculator.sum(n1, n2), sum);
     }
 
-    @Test(groups = "validTests", dependsOnMethods = {"checkValidSum"}, priority = 0)
+    @Test(groups = "validTests", dependsOnMethods = {"checkValidSum"}, priority = -1)
     public void checkValidSubstraction() {
         assertEquals(calculator.substraction(10, 5), 5);
     }
 
-    @Test(groups = "validTests", priority = 0)
+    @Test(groups = "validTests", priority = -1)
     public void checkValidMultiplication() {
         assertTrue(calculator.multiply(2, 3) == 6);
     }
 
     @Test(groups = "invalidTests", enabled = false)
     public void checkInvalidSum() {
-        assertEquals(calculator.sum(3, 4), 0, "Suma nu a fost calculata corect.");
+        assertEquals(calculator.sum(3, 4), 0, "Addition wasn't correctly computed");
     }
 
     @Test(groups = "invalidTests")

@@ -1,21 +1,16 @@
 package org.example;
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-public class TimeConverterTest {
+public class TimeConverterTest extends BaseClass {
 
     TimeConverter timeConverter;
 
-    @BeforeTest
-    public void beforeTest() {
-        System.out.println(" This method is invoked before class! ");
-    }
 
-    @BeforeMethod(alwaysRun = true)
+    @BeforeClass(alwaysRun = true)
     public void setup() {
         timeConverter = new TimeConverter();
     }
