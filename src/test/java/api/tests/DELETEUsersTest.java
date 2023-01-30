@@ -1,56 +1,31 @@
 package api.tests;
 
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.testng.annotations.Test;
 
-import java.util.HashMap;
-import java.util.List;
-
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpStatus.*;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertNull;
 
-public class GETUsersTest extends ApiBaseClass {
-
+public class DELETEUsersTest extends ApiBaseClass {
     @Test
-    public void checkPageNumberAndLimitParameters() {
-
+    public void deleteUser() {
 
         Response response = RestAssured.given()
                 .header("app-id", ApiBaseClass.APP_ID)
-                .get("/user?page=0&limit=10");
+                .contentType(ContentType.JSON)
+                .delete("/user/63d7914f10fee17a516c598d");
         response.getBody().prettyPrint();
         System.out.println("Status code: " + response.getStatusCode());
         System.out.println("Header: " + response.getHeader("content-type"));
         System.out.println("Response time: " + response.getTime());
 
-
-        //Validate provided limit with response list limit
+        //Validate user is deleted successfully
         JsonPath path = response.body().jsonPath();
-        List<HashMap<String, Object>> jsonObjects = path.getList("data");
-        assertEquals(jsonObjects.size(), 10);
-
-        // Validate status code and response time
-        int statusCode = response.getStatusCode();
-        long responseTime = response.time();
-        assertEquals(statusCode, SC_OK);
-        assertTrue(responseTime < 1500);
-    }
-
-    @Test
-    public void checkItemsCreatedInCurrentEnvironment() {
-
-
-        Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
-                .get("/user?created=1");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+        assertNull(path.get("firstName"));
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -58,69 +33,66 @@ public class GETUsersTest extends ApiBaseClass {
     }
 
     @Test
-    public void checkUsersLimit() {
-
+    public void deleteAlreadyDeletedUser() {
 
         Response response = RestAssured.given()
                 .header("app-id", ApiBaseClass.APP_ID)
-                .get("/user");
+                .contentType(ContentType.JSON)
+                .delete("/user/60d0fe4f5311236168a109d3");
         response.getBody().prettyPrint();
         System.out.println("Status code: " + response.getStatusCode());
         System.out.println("Header: " + response.getHeader("content-type"));
         System.out.println("Response time: " + response.getTime());
 
-        //Validate provided limit with response list limit
+        //Validate already deleted user is not found
         JsonPath path = response.body().jsonPath();
-        List<HashMap<String, Object>> jsonObjects = path.getList("data");
-        assertEquals(jsonObjects.size(), 20);
+        assertEquals(path.get("error"), "RESOURCE_NOT_FOUND");
 
         // Validate status code
         int statusCode = response.getStatusCode();
-        assertEquals(statusCode, SC_OK);
+        assertEquals(statusCode, SC_NOT_FOUND);
     }
 
     @Test
-    public void checkUserInfoById() {
-
-        String id = "60d0fe4f5311236168a109dd";
+    public void deleteUserWithInvalidId() {
 
         Response response = RestAssured.given()
                 .header("app-id", ApiBaseClass.APP_ID)
-                .get("/user/" + id);
+                .contentType(ContentType.JSON)
+                .delete("/user/9576445");
         response.getBody().prettyPrint();
         System.out.println("Status code: " + response.getStatusCode());
         System.out.println("Header: " + response.getHeader("content-type"));
         System.out.println("Response time: " + response.getTime());
 
-        //Validate response id as per request
+        //Validate user with invalid id shows error params not valid
         JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("id"), id);
-
-        // Validate status code
-        int statusCode = response.getStatusCode();
-        assertEquals(statusCode, SC_OK);
-    }
-
-    @Test
-    public void checkInvalidPageNumber() {
-
-
-        Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
-                .get("/user?page=1000");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
-
-        //Validate response id as per request
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("total").toString(), "100");
+        assertEquals(path.get("error"), "PARAMS_NOT_VALID");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
+    @Test
+    public void deleteWithoutAuthorization() {
+
+        Response response = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .delete("/user/60d0fe4f5311236168a109ca");
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+
+        //Validate user not deleted without app-id
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "APP_ID_MISSING");
+
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_FORBIDDEN);
+    }
 
 }

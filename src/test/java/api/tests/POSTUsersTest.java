@@ -4,9 +4,9 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import models.UserLocation;
 import org.json.simple.JSONObject;
 import org.testng.annotations.Test;
-
 
 import static org.apache.commons.lang3.RandomStringUtils.*;
 import static org.apache.http.HttpStatus.*;
@@ -389,5 +389,167 @@ public class POSTUsersTest extends ApiBaseClass {
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
+    }
+
+    @Test
+    public void createNewUserWithCharactersForPhone() {
+
+        JSONObject request = createRequestObject();
+
+        request.put("phone", randomAlphabetic(9));
+
+
+        Response response = RestAssured.given()
+                .header("app-id", ApiBaseClass.APP_ID)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/user/create");
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+
+        //Validate characters for phone not allowed
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "BODY_NOT_VALID");
+        assertEquals(path.get("data.phone"), "Path `phone` is invalid.");
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void createUserWithInvalidDateOfBirth() {
+
+        JSONObject request = createRequestObject();
+
+        request.put("dateOfBirth", "now");
+
+        Response response = RestAssured.given()
+                .header("app-id", ApiBaseClass.APP_ID)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/user/create");
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+
+        //Validate user's email is not updated
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "BODY_NOT_VALID");
+        assertEquals(path.get("data.dateOfBirth"), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void createNewUserWithLocation() {
+
+        UserLocation userLocation = new UserLocation();
+
+        JSONObject request = createRequestObject();
+
+        String street = randomAlphabetic(6);
+        String city = randomAlphabetic(5);
+        String state = randomAlphabetic(7);
+        String country = randomAlphabetic(8);
+        String timezone = "+9:00";
+
+        userLocation.setStreet(street);
+        userLocation.setCity(city);
+        userLocation.setState(state);
+        userLocation.setCountry(country);
+        userLocation.setTimezone(timezone);
+
+        request.put("location", userLocation);
+
+
+        Response response = RestAssured.given()
+                .header("app-id", ApiBaseClass.APP_ID)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/user/create");
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+
+        //Validate location information created
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("location.street"), street);
+        assertEquals(path.get("location.city"), city);
+        assertEquals(path.get("location.state"), state);
+        assertEquals(path.get("location.country"), country);
+        assertEquals(path.get("location.timezone"), timezone);
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_CREATED);
+    }
+
+    @Test
+    public void createNewUserWithWrongTimezone() {
+
+        UserLocation userLocation = new UserLocation();
+
+        JSONObject request = createRequestObject();
+
+        String timezone = randomAlphanumeric(4);
+
+        userLocation.setTimezone(timezone);
+
+        request.put("location", userLocation);
+
+
+        Response response = RestAssured.given()
+                .header("app-id", ApiBaseClass.APP_ID)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/user/create");
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+
+        //Validate invalid timezone format not allowed
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "BODY_NOT_VALID");
+        assertEquals(path.get("location.timezone"), "Path `timezone` is invalid.");
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void createNewUserWithInvalidGender() {
+
+        JSONObject request = createRequestObject();
+
+        String gender = randomAlphanumeric(4);
+        request.put("gender", gender);
+
+        Response response = RestAssured.given()
+                .header("app-id", ApiBaseClass.APP_ID)
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/user/create");
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+
+        //Validate invalid gender format not allowed
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "BODY_NOT_VALID");
+        assertEquals(path.get("data.gender"), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
     }
 }
