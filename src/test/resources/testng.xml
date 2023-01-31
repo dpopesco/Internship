@@ -10,16 +10,16 @@
         </groups>
 
         <classes>
-            <class name="org.example.CalculatorTest"/>
-            <class name="org.example.TimeConverterTest"></class>
-            <class name="org.example.EmployeeDetailsTest"></class>
+            <class name="org.example.exercises.CalculatorTest"/>
+            <class name="org.example.exercises.TimeConverterTest"></class>
+            <class name="org.example.exercises.EmployeeDetailsTest"></class>
         </classes>
 
     </test>
 
     <test name="CalculationTest">
         <classes>
-            <class name="org.example.CalculatorTest">
+            <class name="org.example.exercises.CalculatorTest">
                 <methods>
                     <exclude name=".*checkInvalidMultiplication.*"/>
                 </methods>
