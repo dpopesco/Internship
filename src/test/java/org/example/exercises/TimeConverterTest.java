@@ -1,4 +1,4 @@
-package org.example;
+package org.example.exercises;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;

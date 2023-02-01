@@ -1,11 +1,14 @@
-package api.tests;
+package org.example.tests.api.spring.user;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import models.UserLocation;
+import org.example.models.User;
+import org.example.models.UserLocation;
+import org.example.tests.api.spring.ApiBaseClass;
 import org.json.simple.JSONObject;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.apache.commons.lang3.RandomStringUtils.*;
@@ -27,20 +30,54 @@ public class POSTUsersTest extends ApiBaseClass {
         return request;
     }
 
+    @DataProvider(name = "userMandatoryFields")
+    public Object[][] createData() {
+        return new Object[][]{
+                {new User(randomAlphabetic(4), randomAlphabetic(5), randomAlphabetic(5) + "@mail.com")},
+                {new User("Milo", "Milo", "milo@mail.com")}
+
+        };
+    }
+
+    @Test(dataProvider = "userMandatoryFields")
+    public void createUsers(User user) {
+        JSONObject request = new JSONObject();
+        request.put("firstName", user.getFirstName());
+        request.put("lastName", user.getLastName());
+        request.put("email", user.getEmail());
+
+        Response response = RestAssured.given()
+                .header("app-id", properties.getAppId())
+                .contentType(ContentType.JSON)
+                .body(request)
+                .post("/user/create");
+
+
+        logResponse(response);
+
+        //Validate user is created successfully
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("firstName"), request.get("firstName"));
+        assertEquals(path.get("lastName"), request.get("lastName"));
+        assertEquals(path.get("email"), request.get("email").toString().toLowerCase());
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_CREATED);
+    }
+
     @Test
     public void createNewUser() {
 
         JSONObject request = createRequestObject();
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate user is created successfully
         JsonPath path = response.body().jsonPath();
@@ -64,14 +101,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("email", "aron@mail.com");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate email already used error
         JsonPath path = response.body().jsonPath();
@@ -93,14 +128,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("email", " ");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate spaces for mandatory fields not allowed
         JsonPath path = response.body().jsonPath();
@@ -124,14 +157,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("email", "mariana@mail");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate invalid email structure not allowed
         JsonPath path = response.body().jsonPath();
@@ -146,14 +177,12 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithMissingMandatoryFields() {
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .post("/user/create");
 
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate user isn't created without mandatory fields entered
         JsonPath path = response.body().jsonPath();
@@ -174,14 +203,13 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("firstName", "<script>alert(\\'H\\')</script> ");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+
+        logResponse(response);
 
         //Validate user is not created when entering xss script for firstName field
         JsonPath path = response.body().jsonPath();
@@ -203,14 +231,13 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("email", "");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+
+        logResponse(response);
 
         //Validate empty mandatory fields not allowed
         JsonPath path = response.body().jsonPath();
@@ -233,10 +260,8 @@ public class POSTUsersTest extends ApiBaseClass {
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate user not created without app-id
         JsonPath path = response.body().jsonPath();
@@ -257,14 +282,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("firstName", firstName);
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate firstName longer than 30
         JsonPath path = response.body().jsonPath();
@@ -286,14 +309,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("lastName", lastName);
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate lastName longer than 30
         JsonPath path = response.body().jsonPath();
@@ -315,14 +336,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("email", email);
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate email longer than 50
         JsonPath path = response.body().jsonPath();
@@ -343,14 +362,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("title", "unknown");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate wrong title not allowed
         JsonPath path = response.body().jsonPath();
@@ -372,14 +389,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate autogenerated id is created, instead of the one passed
         JsonPath path = response.body().jsonPath();
@@ -400,14 +415,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate characters for phone not allowed
         JsonPath path = response.body().jsonPath();
@@ -427,14 +440,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("dateOfBirth", "now");
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate user's email is not updated
         JsonPath path = response.body().jsonPath();
@@ -469,14 +480,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate location information created
         JsonPath path = response.body().jsonPath();
@@ -506,14 +515,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate invalid timezone format not allowed
         JsonPath path = response.body().jsonPath();
@@ -534,14 +541,12 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("gender", gender);
 
         Response response = RestAssured.given()
-                .header("app-id", ApiBaseClass.APP_ID)
+                .header("app-id", properties.getAppId())
                 .contentType(ContentType.JSON)
                 .body(request)
                 .post("/user/create");
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+
+        logResponse(response);
 
         //Validate invalid gender format not allowed
         JsonPath path = response.body().jsonPath();
