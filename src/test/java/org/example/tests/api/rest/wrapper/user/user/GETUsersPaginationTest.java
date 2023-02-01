@@ -1,9 +1,9 @@
-package org.example.tests.api.spring.user;
+package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.example.tests.api.spring.ApiBaseClass;
+import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
+import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -22,9 +22,7 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkPageNumberAndLimitParameters() {
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .get("/user?page=0&limit=10");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{parameters}", "", "page=0&limit=10");
 
         logResponse(response);
 
@@ -44,9 +42,7 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkUsersLimit() {
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .get("/user");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user{}", "", "");
 
         logResponse(response);
 
@@ -60,7 +56,7 @@ public class GETUsersPaginationTest extends ApiBaseClass {
         assertEquals(statusCode, SC_OK);
     }
 
-    @DataProvider(name = "invalidPageNumber")
+    @DataProvider(name = "invalidNumbers")
     public Object[][] createInvalidData() {
         return new Object[][]{
                 {1000},
@@ -70,15 +66,35 @@ public class GETUsersPaginationTest extends ApiBaseClass {
                 {1.2}
         };
     }
-    @Test(dataProvider = "invalidPageNumber")
-    public void checkInvalidPageNumber( Object pageNumber) {
+
+    @Test(dataProvider = "invalidNumbers")
+    public void checkInvalidPageNumber(Object pageNumber) {
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .get("/user?page="+ pageNumber);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{page}", "", "page=" + pageNumber);
 
         logResponse(response);
+
+        //Validate params not valid
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "PARAMS_NOT_VALID");
+
+        // Validate status code
+        int statusCode = response.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
+    }
+
+    @Test(dataProvider = "invalidNumbers")
+    public void checkInvalidLimitNumber(Object limitNumber) {
+
+
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{limit}", "", "limit=" + limitNumber);
+
+        logResponse(response);
+
+        //Validate params not valid
+        JsonPath path = response.body().jsonPath();
+        assertEquals(path.get("error"), "PARAMS_NOT_VALID");
 
         // Validate status code
         int statusCode = response.getStatusCode();

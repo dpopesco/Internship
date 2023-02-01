@@ -1,10 +1,10 @@
-package org.example.tests.api.spring.user;
+package org.example.tests.api.rest.wrapper.user.user;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.example.tests.api.spring.ApiBaseClass;
+import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.json.simple.JSONObject;
 import org.testng.annotations.Test;
 

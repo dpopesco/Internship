@@ -1,13 +1,12 @@
-package org.example.tests.api.spring.user;
+package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.example.models.User;
 import org.example.models.UserLocation;
-import org.example.tests.api.spring.ApiBaseClass;
+import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.json.simple.JSONObject;
+import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -41,25 +40,16 @@ public class POSTUsersTest extends ApiBaseClass {
 
     @Test(dataProvider = "userMandatoryFields")
     public void createUsers(User user) {
-        JSONObject request = new JSONObject();
-        request.put("firstName", user.getFirstName());
-        request.put("lastName", user.getLastName());
-        request.put("email", user.getEmail());
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
-
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate user is created successfully
         JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), request.get("firstName"));
-        assertEquals(path.get("lastName"), request.get("lastName"));
-        assertEquals(path.get("email"), request.get("email").toString().toLowerCase());
+        assertEquals(path.get("firstName"), user.getFirstName());
+        assertEquals(path.get("lastName"), user.getLastName());
+        assertEquals(path.get("email"), user.getEmail().toLowerCase());
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -71,11 +61,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         JSONObject request = createRequestObject();
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -91,6 +77,7 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_CREATED);
     }
 
+
     @Test
     public void createNewUserUsingExistingEmail() {
 
@@ -100,11 +87,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("lastName", "Radu");
         request.put("email", "aron@mail.com");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -127,11 +110,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("lastName", " ");
         request.put("email", " ");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -156,11 +135,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("lastName", "Ricky");
         request.put("email", "mariana@mail");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -176,11 +151,7 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithMissingMandatoryFields() {
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .post("/user/create");
-
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", "", "");
 
         logResponse(response);
 
@@ -202,12 +173,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         request.put("firstName", "<script>alert(\\'H\\')</script> ");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
-
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -230,12 +196,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("lastName", "");
         request.put("email", "");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
-
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -256,10 +217,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         JSONObject request = createRequestObject();
 
-        Response response = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -281,11 +239,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         request.put("firstName", firstName);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -308,11 +262,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         request.put("lastName", lastName);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -335,11 +285,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         request.put("email", email);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -361,11 +307,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         request.put("title", "unknown");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -388,11 +330,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("id", randomNumeric(6));
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -414,11 +352,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("phone", randomAlphabetic(9));
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -439,11 +373,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         request.put("dateOfBirth", "now");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -479,11 +409,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("location", userLocation);
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -514,11 +440,7 @@ public class POSTUsersTest extends ApiBaseClass {
         request.put("location", userLocation);
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
@@ -540,11 +462,7 @@ public class POSTUsersTest extends ApiBaseClass {
         String gender = randomAlphanumeric(4);
         request.put("gender", gender);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         logResponse(response);
 
