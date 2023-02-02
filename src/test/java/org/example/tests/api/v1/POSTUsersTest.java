@@ -40,23 +40,19 @@ public class POSTUsersTest extends ApiBaseClass {
 
     @Test(dataProvider = "userMandatoryFields")
     public void createUsers(User user) {
-        JSONObject request = new JSONObject();
-        request.put("firstName", user.getFirstName());
-        request.put("lastName", user.getLastName());
-        request.put("email", user.getEmail());
 
         Response response = RestAssured.given()
                 .header("app-id", APP_ID)
                 .contentType(ContentType.JSON)
-                .body(request)
+                .body(user)
                 .post("/user/create");
         logResponse(response);
 
         //Validate user is created successfully
         JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), request.get("firstName"));
-        assertEquals(path.get("lastName"), request.get("lastName"));
-        assertEquals(path.get("email"), request.get("email").toString().toLowerCase());
+        assertEquals(path.get("firstName"), user.getFirstName());
+        assertEquals(path.get("lastName"), user.getLastName());
+        assertEquals(path.get("email"), user.getEmail().toLowerCase());
 
         // Validate status code
         int statusCode = response.getStatusCode();

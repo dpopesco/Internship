@@ -1,7 +1,5 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.example.models.UserLocation;
@@ -39,7 +37,7 @@ public class PUTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_OK);
     }
 
-    //urmeaza sa le modific cu restassured wrapper
+
     @Test
     public void updateUserEmail() {
 
@@ -47,11 +45,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("email", randomAlphanumeric(4) + "@mail.com");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -86,12 +80,7 @@ public class PUTUsersTest extends ApiBaseClass {
         request.put("location", userLocation);
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109cd");
-
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109cd");
 
         logResponse(response);
 
@@ -115,11 +104,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("title", "dr");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -139,11 +124,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("dateOfBirth", "now");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -165,11 +146,7 @@ public class PUTUsersTest extends ApiBaseClass {
         request.put("phone", randomAlphabetic(9));
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -197,11 +174,7 @@ public class PUTUsersTest extends ApiBaseClass {
         request.put("location", userLocation);
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -223,18 +196,14 @@ public class PUTUsersTest extends ApiBaseClass {
         String gender = randomAlphanumeric(4);
         request.put("gender", gender);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
         //Validate invalid gender format not allowed
         JsonPath path = response.body().jsonPath();
         assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.gender"), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
+        assertEquals(path.get("data.gender"), "`" + gender + "` is not a valid enum value for path `gender`.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -249,11 +218,7 @@ public class PUTUsersTest extends ApiBaseClass {
         request.put("firstName", " ");
         request.put("lastName", " ");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -277,11 +242,7 @@ public class PUTUsersTest extends ApiBaseClass {
         request.put("firstName", "");
         request.put("lastName", "");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -302,10 +263,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("firstName", "D");
 
-        Response response = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -327,11 +285,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("firstName", firstName);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -354,18 +308,14 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("lastName", lastName);
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
         //Validate lastName longer than 30
         JsonPath path = response.body().jsonPath();
         assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.firstName"), "Path `firstName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
+        assertEquals(path.get("data.lastName"), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
 
         // Validate status code
@@ -380,11 +330,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         request.put("title", "unknown");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
@@ -407,11 +353,7 @@ public class PUTUsersTest extends ApiBaseClass {
         request.put("id", randomNumeric(6));
 
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .put("/user/60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 

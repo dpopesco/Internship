@@ -17,7 +17,6 @@ public class GETUsersTest extends ApiBaseClass {
     @Test
     public void checkItemsCreatedInCurrentEnvironment() {
 
-
         Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{parameters}", "", "created=1");
 
         logResponse(response);

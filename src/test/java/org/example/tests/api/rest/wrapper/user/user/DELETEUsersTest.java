@@ -1,11 +1,10 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.json.simple.JSONObject;
+import org.springframework.http.HttpMethod;
 import org.testng.annotations.Test;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -29,20 +28,13 @@ public class DELETEUsersTest extends ApiBaseClass {
         request.put("lastName", lastName);
         request.put("email", email);
 
-        Response responseCreate = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .body(request)
-                .post("/user/create");
+        Response responseCreate = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
 
         //save created user's id
         JsonPath pathCreate = responseCreate.body().jsonPath();
         String createdId = pathCreate.get("id");
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .delete("/user/" + createdId);
+        Response response = restWrapper.sendRequest(HttpMethod.DELETE, "/user/{id}", "", createdId);
 
         logResponse(response);
 
@@ -58,10 +50,7 @@ public class DELETEUsersTest extends ApiBaseClass {
     @Test
     public void deleteAlreadyDeletedUser() {
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .delete("/user/60d0fe4f5311236168a109d3");
+        Response response = restWrapper.sendRequest(HttpMethod.DELETE, "/user/{id}", "", "60d0fe4f5311236168a109d3");
 
         logResponse(response);
 
@@ -77,10 +66,7 @@ public class DELETEUsersTest extends ApiBaseClass {
     @Test
     public void deleteUserWithInvalidId() {
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .contentType(ContentType.JSON)
-                .delete("/user/9576445");
+        Response response = restWrapper.sendRequest(HttpMethod.DELETE, "/user/{id}", "", "9576445");
 
         logResponse(response);
 
@@ -96,17 +82,13 @@ public class DELETEUsersTest extends ApiBaseClass {
     @Test
     public void deleteWithoutAuthorization() {
 
-        Response response = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .delete("/user/60d0fe4f5311236168a109ca");
-
+        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.DELETE, "/user/{id}", "", "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 
         //Validate user not deleted without app-id
         JsonPath path = response.body().jsonPath();
         assertEquals(path.get("error"), "APP_ID_MISSING");
-
 
         // Validate status code
         int statusCode = response.getStatusCode();

@@ -17,24 +17,22 @@ import static org.testng.Assert.assertNotEquals;
 
 public class POSTUsersTest extends ApiBaseClass {
 
+
     private JSONObject createRequestObject() {
-        String email = randomAlphanumeric(6) + "@mail.com";
-        String firstName = randomAlphabetic(5);
-        String lastName = randomAlphabetic(6);
 
         JSONObject request = new JSONObject();
-        request.put("firstName", firstName);
-        request.put("lastName", lastName);
-        request.put("email", email);
+        request.put("firstName", "");
+        request.put("lastName", "");
+        request.put("email", "");
         return request;
     }
 
     @DataProvider(name = "userMandatoryFields")
     public Object[][] createData() {
         return new Object[][]{
-                {new User(randomAlphabetic(4), randomAlphabetic(5), randomAlphabetic(5) + "@mail.com")},
-                {new User(randomAlphabetic(6), randomAlphabetic(6), randomAlphabetic(7) + "@mail.com")}
-
+                {User.generateRandomUser()},
+                {User.generateRandomUser()},
+                {User.generateRandomUser()}
         };
     }
 
@@ -59,17 +57,16 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUser() {
 
-        JSONObject request = createRequestObject();
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        User user = User.generateRandomUser();
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate user is created successfully
         JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), request.get("firstName"));
-        assertEquals(path.get("lastName"), request.get("lastName"));
-        assertEquals(path.get("email"), request.get("email").toString().toLowerCase());
+        assertEquals(path.get("firstName"), user.getFirstName());
+        assertEquals(path.get("lastName"), user.getLastName());
+        assertEquals(path.get("email"), user.getEmail().toLowerCase());
 
 
         // Validate status code
@@ -81,13 +78,8 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserUsingExistingEmail() {
 
-        JSONObject request = new JSONObject();
-
-        request.put("firstName", "Aron");
-        request.put("lastName", "Radu");
-        request.put("email", "aron@mail.com");
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        User user = User.generateAlreadyRegisteredUser();
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
@@ -101,6 +93,8 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
+
+    //to do:
     @Test
     public void createNewUserUsingSpacesForMandatoryFields() {
 

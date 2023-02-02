@@ -5,6 +5,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.example.exceptions.ConversionJsonToModelException;
 import org.example.utils.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -64,5 +65,17 @@ public class RestWrapper {
 
     protected RequestSpecification onRequest() {
         return given().spec(configureRequestSpec().setContentType(ContentType.JSON).build());
+    }
+
+    public <T> T convertResponseToModel(Response response, Class<T> modelClass) {
+        T model;
+
+        try {
+            model = response.getBody().as(modelClass);
+        } catch (Exception error) {
+            error.printStackTrace();
+            throw new ConversionJsonToModelException(modelClass, error);
+        }
+        return model;
     }
 }
