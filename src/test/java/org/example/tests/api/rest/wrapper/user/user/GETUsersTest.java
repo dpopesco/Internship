@@ -1,9 +1,9 @@
-package org.example.tests.api.spring.user;
+package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.example.tests.api.spring.ApiBaseClass;
+import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
+import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -17,10 +17,7 @@ public class GETUsersTest extends ApiBaseClass {
     @Test
     public void checkItemsCreatedInCurrentEnvironment() {
 
-
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .get("/user?created=1");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{parameters}", "", "created=1");
 
         logResponse(response);
 
@@ -34,9 +31,7 @@ public class GETUsersTest extends ApiBaseClass {
 
         String id = "60d0fe4f5311236168a109dd";
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .get("/user/" + id);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/{id}", "", id);
 
 
         logResponse(response);
@@ -65,9 +60,7 @@ public class GETUsersTest extends ApiBaseClass {
     @Test(dataProvider = "invalidId")
     public void checkUserInfoProvidingInvalidId(Object id) {
 
-        Response response = RestAssured.given()
-                .header("app-id", properties.getAppId())
-                .get("/user/" + id);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/{id}", "", id);
 
 
         logResponse(response);
