@@ -50,7 +50,7 @@ public class DELETEUsersTest extends ApiBaseClass {
     @Test
     public void deleteAlreadyDeletedUser() {
 
-        Response response = restWrapper.sendRequest(HttpMethod.DELETE, "/user/{id}", "", "60d0fe4f5311236168a109d3");
+        Response response = restWrapper.sendRequest(HttpMethod.DELETE, "/user/{id}", "", "60d0fe4f5311236168a109ca");
 
         logResponse(response);
 

@@ -2,8 +2,11 @@ package org.example.tests.api.rest.wrapper.user.user;
 
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.example.enums.Gender;
+import org.example.enums.Title;
 import org.example.models.User;
 import org.example.models.UserLocation;
+import org.example.models.error.ErrorResponseModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpMethod;
@@ -44,10 +47,11 @@ public class POSTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user is created successfully
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), user.getFirstName());
-        assertEquals(path.get("lastName"), user.getLastName());
-        assertEquals(path.get("email"), user.getEmail().toLowerCase());
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+
+        assertEquals(userM.getFirstName(), user.getFirstName());
+        assertEquals(userM.getLastName(), user.getLastName());
+        assertEquals(userM.getEmail(), user.getEmail().toLowerCase());
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -63,17 +67,16 @@ public class POSTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user is created successfully
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), user.getFirstName());
-        assertEquals(path.get("lastName"), user.getLastName());
-        assertEquals(path.get("email"), user.getEmail().toLowerCase());
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getFirstName(), user.getFirstName());
+        assertEquals(userM.getLastName(), user.getLastName());
+        assertEquals(userM.getEmail(), user.getEmail().toLowerCase());
 
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
-
 
     @Test
     public void createNewUserUsingExistingEmail() {
@@ -84,9 +87,9 @@ public class POSTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate email already used error
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.email"), "Email already used");
+        ErrorResponseModel responseE = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(responseE.getError(), "BODY_NOT_VALID");
+        assertEquals(responseE.getData().getEmail(), "Email already used");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -94,26 +97,23 @@ public class POSTUsersTest extends ApiBaseClass {
     }
 
 
-    //to do:
     @Test
     public void createNewUserUsingSpacesForMandatoryFields() {
 
-        JSONObject request = new JSONObject();
+        User emptyUser = new User(" ", " ", " ");
+        emptyUser.setGender(Gender.FEMALE);
+        emptyUser.setTitle(Title.MISS);
 
-        request.put("firstName", " ");
-        request.put("lastName", " ");
-        request.put("email", " ");
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", emptyUser, "");
 
         logResponse(response);
 
         //Validate spaces for mandatory fields not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.email"), "Path `email` is required.");
-        assertEquals(path.get("data.firstName"), "Path `firstName` is required.");
-        assertEquals(path.get("data.lastName"), "Path `lastName` is required.");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -123,20 +123,18 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithInvalidEmail() {
 
-        JSONObject request = new JSONObject();
+        User userInvalid = new User("Mariana", "Ricky", "mariana@mail");
+        userInvalid.setGender(Gender.FEMALE);
+        userInvalid.setTitle(Title.MISS);
 
-        request.put("firstName", "Mariana");
-        request.put("lastName", "Ricky");
-        request.put("email", "mariana@mail");
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userInvalid, "");
 
         logResponse(response);
 
         //Validate invalid email structure not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.email"), "Path `email` is invalid (mariana@mail).");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is invalid (mariana@mail).");
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
@@ -150,31 +148,31 @@ public class POSTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user isn't created without mandatory fields entered
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.email"), "Path `email` is required.");
-        assertEquals(path.get("data.firstName"), "Path `firstName` is required.");
-        assertEquals(path.get("data.lastName"), "Path `lastName` is required.");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
+
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, user is created with xss injection")
     public void createNewUserUsingXSSForFirstName() {
 
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
+        user.setFirstName("<script>alert(\\'H\\')</script>");
 
-        request.put("firstName", "<script>alert(\\'H\\')</script> ");
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate user is not created when entering xss script for firstName field
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.firstName"), "Path `firstName` is invalid (<script>alert('H')</script>).");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is invalid (<script>alert('H')</script>).");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -184,22 +182,22 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithEmptyMandatoryFields() {
 
-        JSONObject request = new JSONObject();
+        User user = new User("", "", "");
 
-        request.put("firstName", "");
-        request.put("lastName", "");
-        request.put("email", "");
+        //added fields because title and gender are mandatory
+        user.setTitle(Title.MISS);
+        user.setGender(Gender.FEMALE);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate empty mandatory fields not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.email"), "Path `email` is required.");
-        assertEquals(path.get("data.firstName"), "Path `firstName` is required.");
-        assertEquals(path.get("data.lastName"), "Path `lastName` is required.");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -216,8 +214,8 @@ public class POSTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user not created without app-id
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "APP_ID_MISSING");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "APP_ID_MISSING");
 
 
         // Validate status code
@@ -227,20 +225,19 @@ public class POSTUsersTest extends ApiBaseClass {
 
     @Test
     public void createNewUserWithFirstNameLongerThan30Char() {
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
         String firstName = randomAlphabetic(31);
+        user.setFirstName(firstName);
 
-        request.put("firstName", firstName);
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate firstName longer than 30
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.firstName"), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
 
 
         // Validate status code
@@ -250,20 +247,19 @@ public class POSTUsersTest extends ApiBaseClass {
 
     @Test
     public void createNewUserWithLastNameLongerThan30Char() {
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
         String lastName = randomAlphabetic(31);
+        user.setLastName(lastName);
 
-        request.put("lastName", lastName);
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate lastName longer than 30
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.lastName"), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
 
         // Validate status code
@@ -271,22 +267,21 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "server error")
     public void createNewUserWithEmailLongerThan50Char() {
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
-        String email = randomAlphanumeric(47) + "@mail.com";
+        String email = randomAlphabetic(51);
+        user.setEmail(email);
 
-        request.put("email", email);
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate email longer than 50
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.email"), "Path `email` (`" + email + "`) is longer than the maximum allowed length (50).");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` (`" + email + "`) is longer than the maximum allowed length (50).");
 
 
         // Validate status code
@@ -294,14 +289,16 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
+    //to revisit
     @Test
     public void createNewUserWithWrongTitleFormat() {
 
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
-        request.put("title", "unknown");
+        user.setTitle("unknown");
+        //user.setTitle(Title.MISS.name());
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
@@ -319,18 +316,17 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithId() {
 
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
-        request.put("id", randomNumeric(6));
+        user.setEmail(randomNumeric(6));
 
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate autogenerated id is created, instead of the one passed
-        JsonPath path = response.body().jsonPath();
-        assertNotEquals(path.get("id").toString(), request.get("id"));
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertNotEquals(userM.getId(), user.getId());
 
 
         // Validate status code
@@ -384,61 +380,42 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithLocation() {
 
-        UserLocation userLocation = new UserLocation();
+        User userWithLocation = UserLocation.generateUserWithLocation();
 
-        JSONObject request = createRequestObject();
-
-        String street = randomAlphabetic(6);
-        String city = randomAlphabetic(5);
-        String state = randomAlphabetic(7);
-        String country = randomAlphabetic(8);
-        String timezone = "+9:00";
-
-        userLocation.setStreet(street);
-        userLocation.setCity(city);
-        userLocation.setState(state);
-        userLocation.setCountry(country);
-        userLocation.setTimezone(timezone);
-
-        request.put("location", userLocation);
-
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userWithLocation, "");
 
         logResponse(response);
 
         //Validate location information created
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("location.street"), street);
-        assertEquals(path.get("location.city"), city);
-        assertEquals(path.get("location.state"), state);
-        assertEquals(path.get("location.country"), country);
-        assertEquals(path.get("location.timezone"), timezone);
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getLocation().getStreet(), userWithLocation.getLocation().getStreet());
+        assertEquals(userM.getLocation().getCity(), userWithLocation.getLocation().getCity());
+        assertEquals(userM.getLocation().getState(), userWithLocation.getLocation().getState());
+        assertEquals(userM.getLocation().getCountry(), userWithLocation.getLocation().getCountry());
+        assertEquals(userM.getLocation().getTimezone(), userWithLocation.getLocation().getTimezone());
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
+    //de revenit cu error
     @Test
     public void createNewUserWithWrongTimezone() {
 
-        UserLocation userLocation = new UserLocation();
-
-        JSONObject request = createRequestObject();
+        User userTimezone = UserLocation.generateUserWithLocation();
 
         String timezone = randomAlphanumeric(4);
 
-        userLocation.setTimezone(timezone);
+        UserLocation location = userTimezone.getLocation();
+        location.setTimezone(timezone);
 
-        request.put("location", userLocation);
-
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userTimezone, "");
 
         logResponse(response);
 
         //Validate invalid timezone format not allowed
+        User userM = restWrapper.convertResponseToModel(response, User.class);
         JsonPath path = response.body().jsonPath();
         assertEquals(path.get("error"), "BODY_NOT_VALID");
         assertEquals(path.get("location.timezone"), "Path `timezone` is invalid.");

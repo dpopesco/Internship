@@ -2,6 +2,7 @@ package org.example.tests.api.rest.wrapper.user.user;
 
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.example.models.UsersCollection;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
@@ -27,9 +28,8 @@ public class GETUsersPaginationTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate provided limit with response list limit
-        JsonPath path = response.body().jsonPath();
-        List<HashMap<String, Object>> jsonObjects = path.getList("data");
-        assertEquals(jsonObjects.size(), 10);
+        UsersCollection users = restWrapper.convertResponseToModel(response,UsersCollection.class);
+        assertEquals(users.getData().size(),10);
 
         // Validate status code and response time
         int statusCode = response.getStatusCode();

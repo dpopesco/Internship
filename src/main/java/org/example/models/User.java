@@ -25,13 +25,15 @@ public class User {
     @JsonProperty(value = "email", required = true)
     private String email;
     @JsonProperty(value = "title")
-    private Title title;
+    private String title;
     @JsonProperty(value = "gender")
     private Gender gender;
     @JsonProperty(value = "dateOfBirth")
     private Date dateOfBirth;
     @JsonProperty(value = "registerDate")
     private Date registerDate;
+    @JsonProperty(value = "updatedDate")
+    private Date updatedDate;
     @JsonProperty(value = "phone")
     private String phone;
     @JsonProperty(value = "picture")
@@ -55,14 +57,14 @@ public class User {
         String lastName = randomAlphabetic(6);
 
         User newUser = new User(firstName, lastName, email);
-        newUser.setTitle(Title.MISS);
+        newUser.setTitle(Title.MISS.toString());
         newUser.setGender(Gender.FEMALE);
         return newUser;
     }
 
     public static User generateAlreadyRegisteredUser() {
         User user = new User("Aron", "Radu", "aron@mail.com");
-        user.setTitle(Title.MR);
+        user.setTitle(Title.MR.toString());
         user.setGender(Gender.MALE);
         return user;
     }
