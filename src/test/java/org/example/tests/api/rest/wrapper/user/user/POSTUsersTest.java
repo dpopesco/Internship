@@ -1,6 +1,5 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.example.enums.Gender;
 import org.example.enums.Title;
@@ -8,7 +7,7 @@ import org.example.models.User;
 import org.example.models.UserLocation;
 import org.example.models.error.ErrorResponseModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -19,16 +18,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
 public class POSTUsersTest extends ApiBaseClass {
-
-
-    private JSONObject createRequestObject() {
-
-        JSONObject request = new JSONObject();
-        request.put("firstName", "");
-        request.put("lastName", "");
-        request.put("email", "");
-        return request;
-    }
 
     @DataProvider(name = "userMandatoryFields")
     public Object[][] createData() {
@@ -101,8 +90,8 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserUsingSpacesForMandatoryFields() {
 
         User emptyUser = new User(" ", " ", " ");
-        emptyUser.setGender(Gender.FEMALE);
-        emptyUser.setTitle(Title.MISS);
+        emptyUser.setGender(Gender.FEMALE.name().toLowerCase());
+        emptyUser.setTitle(Title.MISS.name().toLowerCase());
 
         Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", emptyUser, "");
 
@@ -124,8 +113,8 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithInvalidEmail() {
 
         User userInvalid = new User("Mariana", "Ricky", "mariana@mail");
-        userInvalid.setGender(Gender.FEMALE);
-        userInvalid.setTitle(Title.MISS);
+        userInvalid.setGender(Gender.FEMALE.name().toLowerCase());
+        userInvalid.setTitle(Title.MISS.name().toLowerCase());
 
         Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userInvalid, "");
 
@@ -185,8 +174,8 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = new User("", "", "");
 
         //added fields because title and gender are mandatory
-        user.setTitle(Title.MISS);
-        user.setGender(Gender.FEMALE);
+        user.setTitle(Title.MISS.name().toLowerCase());
+        user.setGender(Gender.FEMALE.name().toLowerCase());
 
         Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
@@ -207,9 +196,9 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithoutAuthorization() {
 
-        JSONObject request = createRequestObject();
+        User user = new User("Ella", "Miro", "ella@mail.com");
 
-        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
@@ -267,7 +256,7 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test(description = "server error")
+    @Test(description = "server error 502")
     public void createNewUserWithEmailLongerThan50Char() {
         User user = User.generateRandomUser();
 
@@ -296,17 +285,15 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = User.generateRandomUser();
 
         user.setTitle("unknown");
-        //user.setTitle(Title.MISS.name());
 
         Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate wrong title not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.title"), "`unknown` is not a valid enum value for path `title`.");
-
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -334,22 +321,21 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_CREATED);
     }
 
-    @Test
+    @Test(description = "Bug, api accepts characters for phone")
     public void createNewUserWithCharactersForPhone() {
 
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
-        request.put("phone", randomAlphabetic(9));
+        user.setPhone(randomAlphabetic(9));
 
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate characters for phone not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.phone"), "Path `phone` is invalid.");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getPhone(), "Path `phone` is invalid.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -359,18 +345,19 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createUserWithInvalidDateOfBirth() {
 
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
+        JSONObject userS = new JSONObject(user);
 
-        request.put("dateOfBirth", "now");
+        userS.put("dateOfBirth", "now");
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userS.toString(), "");
 
         logResponse(response);
 
         //Validate user's email is not updated
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.dateOfBirth"), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -380,7 +367,7 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithLocation() {
 
-        User userWithLocation = UserLocation.generateUserWithLocation();
+        User userWithLocation = User.generateUserWithLocation();
 
         Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userWithLocation, "");
 
@@ -399,26 +386,24 @@ public class POSTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_CREATED);
     }
 
-    //de revenit cu error
     @Test
     public void createNewUserWithWrongTimezone() {
 
-        User userTimezone = UserLocation.generateUserWithLocation();
+        User userL = User.generateUserWithLocation();
 
         String timezone = randomAlphanumeric(4);
 
-        UserLocation location = userTimezone.getLocation();
+        UserLocation location = userL.getLocation();
         location.setTimezone(timezone);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userTimezone, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userL, "");
 
         logResponse(response);
 
         //Validate invalid timezone format not allowed
-        User userM = restWrapper.convertResponseToModel(response, User.class);
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("location.timezone"), "Path `timezone` is invalid.");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -428,19 +413,19 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithInvalidGender() {
 
-        JSONObject request = createRequestObject();
+        User user = User.generateRandomUser();
 
         String gender = randomAlphanumeric(4);
-        request.put("gender", gender);
+        user.setGender(gender);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", request, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
 
         logResponse(response);
 
         //Validate invalid gender format not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.gender"), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
+        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getGender(), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
 
         // Validate status code
         int statusCode = response.getStatusCode();

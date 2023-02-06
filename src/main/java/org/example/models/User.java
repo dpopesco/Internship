@@ -27,7 +27,7 @@ public class User {
     @JsonProperty(value = "title")
     private String title;
     @JsonProperty(value = "gender")
-    private Gender gender;
+    private String gender;
     @JsonProperty(value = "dateOfBirth")
     private Date dateOfBirth;
     @JsonProperty(value = "registerDate")
@@ -57,15 +57,34 @@ public class User {
         String lastName = randomAlphabetic(6);
 
         User newUser = new User(firstName, lastName, email);
-        newUser.setTitle(Title.MISS.toString());
-        newUser.setGender(Gender.FEMALE);
+        newUser.setTitle(Title.MISS.name().toLowerCase());
+        newUser.setGender(Gender.FEMALE.name().toLowerCase());
         return newUser;
     }
 
     public static User generateAlreadyRegisteredUser() {
         User user = new User("Aron", "Radu", "aron@mail.com");
-        user.setTitle(Title.MR.toString());
-        user.setGender(Gender.MALE);
+        user.setTitle(Title.MR.name().toLowerCase());
+        user.setGender(Gender.MALE.name().toLowerCase());
+        return user;
+    }
+
+    public static User generateUserWithLocation() {
+        User user = User.generateRandomUser();
+        String street = randomAlphabetic(6);
+        String city = randomAlphabetic(5);
+        String state = randomAlphabetic(7);
+        String country = randomAlphabetic(8);
+        String timezone = "+9:00";
+
+        UserLocation userLocation = new UserLocation();
+
+        userLocation.setStreet(street);
+        userLocation.setCity(city);
+        userLocation.setState(state);
+        userLocation.setCountry(country);
+        userLocation.setTimezone(timezone);
+        user.setLocation(userLocation);
         return user;
     }
 }
