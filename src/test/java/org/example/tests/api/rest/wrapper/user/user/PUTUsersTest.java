@@ -3,7 +3,7 @@ package org.example.tests.api.rest.wrapper.user.user;
 import io.restassured.response.Response;
 import org.example.models.User;
 import org.example.models.UserLocation;
-import org.example.models.error.ErrorResponseModel;
+import org.example.models.error.UserErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.json.JSONObject;
 import org.springframework.http.HttpMethod;
@@ -129,7 +129,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user's date of birth not updated
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
 
@@ -150,7 +150,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate characters for phone not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getPhone(), "Path `phone` is invalid.");
 
@@ -175,7 +175,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate invalid timezone format not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
 
@@ -197,7 +197,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate invalid gender format not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getGender(), "`" + gender + "` is not a valid enum value for path `gender`.");
 
@@ -219,7 +219,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate empty mandatory fields not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
         assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
@@ -263,7 +263,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user not updated without app-id
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "APP_ID_MISSING");
 
         // Validate status code
@@ -284,10 +284,9 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate firstName longer than 30
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
-
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -307,7 +306,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate lastName longer than 30
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
@@ -329,7 +328,7 @@ public class PUTUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate wrong title not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
 

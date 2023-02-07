@@ -15,7 +15,7 @@ import static org.testng.AssertJUnit.assertTrue;
 public class GETPostsTest extends ApiBaseClass {
     @Test
     public void getPostList() {
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/post{}", "", "");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/post", "", "");
 
         logResponse(response);
 
@@ -47,7 +47,7 @@ public class GETPostsTest extends ApiBaseClass {
 
         String id = "60d0fe4f5311236168a109ed";
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/" + id + "/post{}", "", "");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/" + id + "/post", "", "");
 
         logResponse(response);
 
@@ -65,7 +65,7 @@ public class GETPostsTest extends ApiBaseClass {
 
         String tag = "ice";
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/tag/" + tag + "/post{}", "", "");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/tag/" + tag + "/post", "", "");
 
         logResponse(response);
 

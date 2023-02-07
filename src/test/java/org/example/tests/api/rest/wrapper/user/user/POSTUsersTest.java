@@ -5,7 +5,8 @@ import org.example.enums.Gender;
 import org.example.enums.Title;
 import org.example.models.User;
 import org.example.models.UserLocation;
-import org.example.models.error.ErrorResponseModel;
+import org.example.models.error.ErrorModel;
+import org.example.models.error.UserErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.json.JSONObject;
 import org.springframework.http.HttpMethod;
@@ -31,7 +32,7 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test(dataProvider = "userMandatoryFields")
     public void createUsers(User user) {
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
@@ -51,7 +52,7 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUser() {
 
         User user = User.generateRandomUser();
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
@@ -71,12 +72,12 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserUsingExistingEmail() {
 
         User user = User.generateAlreadyRegisteredUser();
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate email already used error
-        ErrorResponseModel responseE = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel responseE = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(responseE.getError(), "BODY_NOT_VALID");
         assertEquals(responseE.getData().getEmail(), "Email already used");
 
@@ -90,15 +91,15 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserUsingSpacesForMandatoryFields() {
 
         User emptyUser = new User(" ", " ", " ");
-        emptyUser.setGender(Gender.FEMALE.name().toLowerCase());
-        emptyUser.setTitle(Title.MISS.name().toLowerCase());
+        emptyUser.setGender(Gender.FEMALE.getUserGender());
+        emptyUser.setTitle(Title.MISS.getUserTitle());
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", emptyUser, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", emptyUser, "");
 
         logResponse(response);
 
         //Validate spaces for mandatory fields not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
@@ -113,15 +114,15 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithInvalidEmail() {
 
         User userInvalid = new User("Mariana", "Ricky", "mariana@mail");
-        userInvalid.setGender(Gender.FEMALE.name().toLowerCase());
-        userInvalid.setTitle(Title.MISS.name().toLowerCase());
+        userInvalid.setGender(Gender.FEMALE.getUserGender());
+        userInvalid.setTitle(Title.MISS.getUserTitle());
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userInvalid, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userInvalid, "");
 
         logResponse(response);
 
         //Validate invalid email structure not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is invalid (mariana@mail).");
         // Validate status code
@@ -132,12 +133,12 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithMissingMandatoryFields() {
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", "", "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", "", "");
 
         logResponse(response);
 
         //Validate user isn't created without mandatory fields entered
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
@@ -154,12 +155,12 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = User.generateRandomUser();
         user.setFirstName("<script>alert(\\'H\\')</script>");
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate user is not created when entering xss script for firstName field
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is invalid (<script>alert('H')</script>).");
 
@@ -174,15 +175,15 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = new User("", "", "");
 
         //added fields because title and gender are mandatory
-        user.setTitle(Title.MISS.name().toLowerCase());
-        user.setGender(Gender.FEMALE.name().toLowerCase());
+        user.setTitle(Title.MISS.getUserTitle());
+        user.setGender(Gender.FEMALE.getUserGender());
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate empty mandatory fields not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
@@ -198,14 +199,13 @@ public class POSTUsersTest extends ApiBaseClass {
 
         User user = new User("Ella", "Miro", "ella@mail.com");
 
-        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate user not created without app-id
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "APP_ID_MISSING");
-
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -219,12 +219,12 @@ public class POSTUsersTest extends ApiBaseClass {
         String firstName = randomAlphabetic(31);
         user.setFirstName(firstName);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate firstName longer than 30
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
 
@@ -241,12 +241,12 @@ public class POSTUsersTest extends ApiBaseClass {
         String lastName = randomAlphabetic(31);
         user.setLastName(lastName);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate lastName longer than 30
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
@@ -263,12 +263,12 @@ public class POSTUsersTest extends ApiBaseClass {
         String email = randomAlphabetic(51);
         user.setEmail(email);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate email longer than 50
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getEmail(), "Path `email` (`" + email + "`) is longer than the maximum allowed length (50).");
 
@@ -286,12 +286,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
         user.setTitle("unknown");
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate wrong title not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
 
@@ -307,7 +307,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         user.setEmail(randomNumeric(6));
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
@@ -328,12 +328,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
         user.setPhone(randomAlphabetic(9));
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate characters for phone not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getPhone(), "Path `phone` is invalid.");
 
@@ -350,12 +350,12 @@ public class POSTUsersTest extends ApiBaseClass {
 
         userS.put("dateOfBirth", "now");
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userS.toString(), "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userS.toString(), "");
 
         logResponse(response);
 
         //Validate user's email is not updated
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
 
@@ -369,7 +369,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         User userWithLocation = User.generateUserWithLocation();
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userWithLocation, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userWithLocation, "");
 
         logResponse(response);
 
@@ -396,12 +396,12 @@ public class POSTUsersTest extends ApiBaseClass {
         UserLocation location = userL.getLocation();
         location.setTimezone(timezone);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", userL, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userL, "");
 
         logResponse(response);
 
         //Validate invalid timezone format not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
 
@@ -418,12 +418,12 @@ public class POSTUsersTest extends ApiBaseClass {
         String gender = randomAlphanumeric(4);
         user.setGender(gender);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         logResponse(response);
 
         //Validate invalid gender format not allowed
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
         assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
         assertEquals(errorResponseModel.getData().getGender(), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
 

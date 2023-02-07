@@ -2,7 +2,7 @@ package org.example.tests.api.rest.wrapper.user.user;
 
 import io.restassured.response.Response;
 import org.example.models.User;
-import org.example.models.error.ErrorResponseModel;
+import org.example.models.error.ErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.Test;
@@ -19,7 +19,7 @@ public class DELETEUsersTest extends ApiBaseClass {
         //create new user
         User user = User.generateRandomUser();
 
-        Response responseCreate = restWrapper.sendRequest(HttpMethod.POST, "/user/create{}", user, "");
+        Response responseCreate = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
 
         //save created id from response
         User userMC = restWrapper.convertResponseToModel(responseCreate, User.class);
@@ -45,7 +45,7 @@ public class DELETEUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate already deleted user is not found
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "RESOURCE_NOT_FOUND");
 
         // Validate status code
@@ -61,7 +61,7 @@ public class DELETEUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user with invalid id shows error params not valid
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
@@ -77,7 +77,7 @@ public class DELETEUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate user not deleted without app-id
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "APP_ID_MISSING");
 
         // Validate status code

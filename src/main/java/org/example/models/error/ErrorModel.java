@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public abstract class ObjectError {
+public class ErrorModel {
     private String error;
 }

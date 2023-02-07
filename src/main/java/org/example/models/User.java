@@ -57,15 +57,15 @@ public class User {
         String lastName = randomAlphabetic(6);
 
         User newUser = new User(firstName, lastName, email);
-        newUser.setTitle(Title.MISS.name().toLowerCase());
-        newUser.setGender(Gender.FEMALE.name().toLowerCase());
+        newUser.setTitle(Title.MISS.getUserTitle());
+        newUser.setGender(Gender.FEMALE.getUserGender());
         return newUser;
     }
 
     public static User generateAlreadyRegisteredUser() {
         User user = new User("Aron", "Radu", "aron@mail.com");
-        user.setTitle(Title.MR.name().toLowerCase());
-        user.setGender(Gender.MALE.name().toLowerCase());
+        user.setTitle(Title.MR.getUserTitle());
+        user.setGender(Gender.MALE.getUserGender());
         return user;
     }
 

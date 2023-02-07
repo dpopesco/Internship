@@ -5,6 +5,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.apache.commons.lang3.StringUtils;
 import org.example.exceptions.ConversionJsonToModelException;
 import org.example.utils.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,22 +41,38 @@ public class RestWrapper {
         return this;
     }
 
-    public Response sendRequest(HttpMethod httpMethod, String path, Object body, Object params) {
+    public Response sendRequest(HttpMethod httpMethod, String path, Object body, String params) {
 
         Response returnedResponse;
 
         switch (httpMethod) {
             case GET:
-                returnedResponse = onRequest().get(path, params).andReturn();
+                if (StringUtils.isNotEmpty(params)) {
+                    returnedResponse = onRequest().get(path, params).andReturn();
+                } else {
+                    returnedResponse = onRequest().get(path).andReturn();
+                }
                 break;
             case POST:
-                returnedResponse = onRequest().body(body).post(path, params).andReturn();
+                if (StringUtils.isNotEmpty(params)) {
+                    returnedResponse = onRequest().body(body).post(path, params).andReturn();
+                } else {
+                    returnedResponse = onRequest().body(body).post(path).andReturn();
+                }
                 break;
             case PUT:
-                returnedResponse = onRequest().body(body).put(path, params).andReturn();
+                if (StringUtils.isNotEmpty(params)) {
+                    returnedResponse = onRequest().body(body).put(path, params).andReturn();
+                } else {
+                    returnedResponse = onRequest().body(body).put(path).andReturn();
+                }
                 break;
             case DELETE:
-                returnedResponse = onRequest().delete(path, params).andReturn();
+                if (StringUtils.isNotEmpty(params)) {
+                    returnedResponse = onRequest().delete(path, params).andReturn();
+                } else {
+                    returnedResponse = onRequest().delete(path).andReturn();
+                }
                 break;
             default:
                 throw new RuntimeException("Please send a valid method");

@@ -2,7 +2,7 @@ package org.example.tests.api.rest.wrapper.user.user;
 
 import io.restassured.response.Response;
 import org.example.models.User;
-import org.example.models.error.ErrorResponseModel;
+import org.example.models.error.ErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
@@ -61,13 +61,13 @@ public class GETUsersTest extends ApiBaseClass {
     @Test(dataProvider = "invalidId")
     public void checkUserInfoProvidingInvalidId(Object id) {
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/{id}", "", id);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/{id}", "", String.valueOf(id));
 
 
         logResponse(response);
 
         //Validate params not valid
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code

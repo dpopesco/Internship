@@ -2,7 +2,7 @@ package org.example.tests.api.rest.wrapper.user.user;
 
 import io.restassured.response.Response;
 import org.example.models.UsersCollection;
-import org.example.models.error.ErrorResponseModel;
+import org.example.models.error.ErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
@@ -39,7 +39,7 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkUsersLimit() {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user{}", "", "");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user", "", "");
 
         logResponse(response);
 
@@ -67,12 +67,12 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkInvalidPageNumber(Object pageNumber) {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{page}", "", "page=" + pageNumber);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{page}", "", "page=" + String.valueOf(pageNumber));
 
         logResponse(response);
 
         //Validate params not valid
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
@@ -84,12 +84,12 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkInvalidLimitNumber(Object limitNumber) {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{limit}", "", "limit=" + limitNumber);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{limit}", "", "limit=" + String.valueOf(limitNumber));
 
         logResponse(response);
 
         //Validate params not valid
-        ErrorResponseModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorResponseModel.class);
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
         assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code

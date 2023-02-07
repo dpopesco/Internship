@@ -6,6 +6,6 @@ import org.example.models.User;
 
 @Getter
 @Setter
-public class ErrorResponseModel extends ObjectError {
+public class UserErrorModel extends ErrorModel {
     private User data;
 }
