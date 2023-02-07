@@ -1,10 +1,11 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.example.models.User;
 import org.example.models.UserLocation;
+import org.example.models.error.UserErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.Test;
 
@@ -17,41 +18,39 @@ public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateUser() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("firstName", randomAlphabetic(5));
-        request.put("lastName", randomAlphabetic(5));
+        user.setFirstName(randomAlphabetic(5));
+        user.setLastName(randomAlphabetic(5));
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
-
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate user is updated successfully
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), request.get("firstName"));
-        assertEquals(path.get("lastName"), request.get("lastName"));
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getFirstName(), user.getFirstName());
+        assertEquals(userM.getLastName(), user.getLastName());
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
 
-
     @Test
     public void updateUserEmail() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("email", randomAlphanumeric(4) + "@mail.com");
+        user.setEmail(randomAlphanumeric(4) + "@mail.com");
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate user's email is not updated
-        JsonPath path = response.body().jsonPath();
-        assertNotEquals(path.get("email"), request.get("email"));
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertNotEquals(userM.getEmail(), user.getEmail());
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -61,9 +60,8 @@ public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateUserLocation() {
 
+        User user = new User();
         UserLocation userLocation = new UserLocation();
-
-        JSONObject request = new JSONObject();
 
         String street = randomAlphabetic(6);
         String city = randomAlphabetic(5);
@@ -77,20 +75,19 @@ public class PUTUsersTest extends ApiBaseClass {
         userLocation.setCountry(country);
         userLocation.setTimezone(timezone);
 
-        request.put("location", userLocation);
+        user.setLocation(userLocation);
 
-
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109cd");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate location information updated
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("location.street"), street);
-        assertEquals(path.get("location.city"), city);
-        assertEquals(path.get("location.state"), state);
-        assertEquals(path.get("location.country"), country);
-        assertEquals(path.get("location.timezone"), timezone);
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getLocation().getStreet(), street);
+        assertEquals(userM.getLocation().getCity(), city);
+        assertEquals(userM.getLocation().getState(), state);
+        assertEquals(userM.getLocation().getCountry(), country);
+        assertEquals(userM.getLocation().getTimezone(), timezone);
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -100,134 +97,132 @@ public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateUserTitle() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("title", "dr");
+        user.setTitle("dr");
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate user's email is not updated
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("title"), request.get("title"));
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getTitle(), user.getTitle());
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to put `now` as value for dateOfBirth field")
     public void updateUserWithInvalidDateOfBirth() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("dateOfBirth", "now");
+        //serialize the object in Json
+        JSONObject userS = new JSONObject(user);
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        userS.put("dateOfBirth", "now");
+
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", userS.toString(), "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate user's date of birth not updated
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.dateOfBirth"), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to put characters for phone field")
     public void updateNewUserWithCharactersForPhone() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("phone", randomAlphabetic(9));
+        user.setPhone(randomAlphabetic(9));
 
-
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate characters for phone not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.phone"), "Path `phone` is invalid.");
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getPhone(), "Path `phone` is invalid.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to put characters for timezone field")
     public void updateUserWithWrongTimezone() {
 
         UserLocation userLocation = new UserLocation();
-
-        JSONObject request = new JSONObject();
+        User user = new User();
 
         String timezone = randomAlphanumeric(4);
 
         userLocation.setTimezone(timezone);
+        user.setLocation(userLocation);
 
-        request.put("location", userLocation);
-
-
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate invalid timezone format not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("location.timezone"), "Path `timezone` is invalid.");
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to put invalid gender value")
     public void updateNewUserWithInvalidGender() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
         String gender = randomAlphanumeric(4);
-        request.put("gender", gender);
+        user.setGender(gender);
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate invalid gender format not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.gender"), "`" + gender + "` is not a valid enum value for path `gender`.");
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getGender(), "`" + gender + "` is not a valid enum value for path `gender`.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, user can be updated with spaces for mandatory fields")
     public void updateUserUsingSpacesForMandatoryFields() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("firstName", " ");
-        request.put("lastName", " ");
+        user.setFirstName(" ");
+        user.setLastName(" ");
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate empty mandatory fields not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.firstName"), "Path `firstName` is required.");
-        assertEquals(path.get("data.lastName"), "Path `lastName` is required.");
-
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -237,19 +232,19 @@ public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateUserWithEmptyMandatoryFields() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("firstName", "");
-        request.put("lastName", "");
+        user.setFirstName("");
+        user.setLastName("");
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate empty mandatory fields not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("firstName"), "Sara");
-        assertEquals(path.get("lastName"), "Andersen");
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getFirstName(), "Edita");
+        assertEquals(userM.getLastName(), "Vestering");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -259,63 +254,61 @@ public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateWithoutAuthorization() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("firstName", "D");
+        user.setFirstName("D");
 
-        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate user not updated without app-id
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "APP_ID_MISSING");
-
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "APP_ID_MISSING");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_FORBIDDEN);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to update firstName bigger than 30 characters")
     public void updateUserWithFirstNameLongerThan30Char() {
-        JSONObject request = new JSONObject();
+        User user = new User();
 
         String firstName = randomAlphabetic(31);
 
-        request.put("firstName", firstName);
+        user.setFirstName(firstName);
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate firstName longer than 30
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.firstName"), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
-
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
 
         // Validate status code
         int statusCode = response.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to update lastName bigger than 30 characters")
     public void updateUserWithLastNameLongerThan30Char() {
-        JSONObject request = new JSONObject();
+        User user = new User();
 
         String lastName = randomAlphabetic(31);
 
-        request.put("lastName", lastName);
+        user.setLastName(lastName);
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate lastName longer than 30
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.lastName"), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
 
         // Validate status code
@@ -323,22 +316,21 @@ public class PUTUsersTest extends ApiBaseClass {
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test
+    @Test(description = "bug, api accepts to update with invalid title ")
     public void updateUserWithWrongTitleFormat() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("title", "unknown");
+        user.setTitle("unknown");
 
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate wrong title not allowed
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "BODY_NOT_VALID");
-        assertEquals(path.get("data.title"), "`unknown` is not a valid enum value for path `title`.");
-
+        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(errorResponseModel.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -348,19 +340,17 @@ public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateUserId() {
 
-        JSONObject request = new JSONObject();
+        User user = new User();
 
-        request.put("id", randomNumeric(6));
+        user.setId(randomNumeric(6));
 
-
-        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", request, "60d0fe4f5311236168a109ca");
+        Response response = restWrapper.sendRequest(HttpMethod.PUT, "/user/{id}", user, "60d0fe4f5311236168a109cb");
 
         logResponse(response);
 
         //Validate autogenerated id remained, instead of the one passed
-        JsonPath path = response.body().jsonPath();
-        assertNotEquals(path.get("id").toString(), request.get("id"));
-
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertNotEquals(userM.getId(), user.getId());
 
         // Validate status code
         int statusCode = response.getStatusCode();

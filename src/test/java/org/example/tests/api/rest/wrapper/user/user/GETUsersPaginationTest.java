@@ -1,14 +1,12 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.example.models.UsersCollection;
+import org.example.models.error.ErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-
-import java.util.HashMap;
-import java.util.List;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -27,9 +25,8 @@ public class GETUsersPaginationTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate provided limit with response list limit
-        JsonPath path = response.body().jsonPath();
-        List<HashMap<String, Object>> jsonObjects = path.getList("data");
-        assertEquals(jsonObjects.size(), 10);
+        UsersCollection users = restWrapper.convertResponseToModel(response, UsersCollection.class);
+        assertEquals(users.getData().size(), 10);
 
         // Validate status code and response time
         int statusCode = response.getStatusCode();
@@ -42,14 +39,13 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkUsersLimit() {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user{}", "", "");
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user", "", "");
 
         logResponse(response);
 
         //Validate provided limit with response list limit
-        JsonPath path = response.body().jsonPath();
-        List<HashMap<String, Object>> jsonObjects = path.getList("data");
-        assertEquals(jsonObjects.size(), 20);
+        UsersCollection usersCollection = restWrapper.convertResponseToModel(response, UsersCollection.class);
+        assertEquals(usersCollection.getData().size(), 20);
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -67,17 +63,17 @@ public class GETUsersPaginationTest extends ApiBaseClass {
         };
     }
 
-    @Test(dataProvider = "invalidNumbers")
+    @Test(dataProvider = "invalidNumbers", description = "bug, api accepts invalid page parameter")
     public void checkInvalidPageNumber(Object pageNumber) {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{page}", "", "page=" + pageNumber);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{page}", "", "page=" + String.valueOf(pageNumber));
 
         logResponse(response);
 
         //Validate params not valid
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "PARAMS_NOT_VALID");
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -88,13 +84,13 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkInvalidLimitNumber(Object limitNumber) {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{limit}", "", "limit=" + limitNumber);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{limit}", "", "limit=" + String.valueOf(limitNumber));
 
         logResponse(response);
 
         //Validate params not valid
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "PARAMS_NOT_VALID");
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
         int statusCode = response.getStatusCode();

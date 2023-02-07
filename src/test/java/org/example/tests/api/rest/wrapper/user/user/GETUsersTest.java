@@ -1,7 +1,8 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import org.example.models.User;
+import org.example.models.error.ErrorModel;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
 import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
@@ -37,8 +38,8 @@ public class GETUsersTest extends ApiBaseClass {
         logResponse(response);
 
         //Validate response id as per request
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("id"), id);
+        User userM = restWrapper.convertResponseToModel(response, User.class);
+        assertEquals(userM.getId(), id);
 
         // Validate status code
         int statusCode = response.getStatusCode();
@@ -60,14 +61,14 @@ public class GETUsersTest extends ApiBaseClass {
     @Test(dataProvider = "invalidId")
     public void checkUserInfoProvidingInvalidId(Object id) {
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/{id}", "", id);
+        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user/{id}", "", String.valueOf(id));
 
 
         logResponse(response);
 
         //Validate params not valid
-        JsonPath path = response.body().jsonPath();
-        assertEquals(path.get("error"), "PARAMS_NOT_VALID");
+        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
+        assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
         int statusCode = response.getStatusCode();

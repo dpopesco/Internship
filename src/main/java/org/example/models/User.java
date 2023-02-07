@@ -25,13 +25,15 @@ public class User {
     @JsonProperty(value = "email", required = true)
     private String email;
     @JsonProperty(value = "title")
-    private Title title;
+    private String title;
     @JsonProperty(value = "gender")
-    private Gender gender;
+    private String gender;
     @JsonProperty(value = "dateOfBirth")
     private Date dateOfBirth;
     @JsonProperty(value = "registerDate")
     private Date registerDate;
+    @JsonProperty(value = "updatedDate")
+    private Date updatedDate;
     @JsonProperty(value = "phone")
     private String phone;
     @JsonProperty(value = "picture")
@@ -55,15 +57,34 @@ public class User {
         String lastName = randomAlphabetic(6);
 
         User newUser = new User(firstName, lastName, email);
-        newUser.setTitle(Title.MISS);
-        newUser.setGender(Gender.FEMALE);
+        newUser.setTitle(Title.MISS.getUserTitle());
+        newUser.setGender(Gender.FEMALE.getUserGender());
         return newUser;
     }
 
     public static User generateAlreadyRegisteredUser() {
         User user = new User("Aron", "Radu", "aron@mail.com");
-        user.setTitle(Title.MR);
-        user.setGender(Gender.MALE);
+        user.setTitle(Title.MR.getUserTitle());
+        user.setGender(Gender.MALE.getUserGender());
+        return user;
+    }
+
+    public static User generateUserWithLocation() {
+        User user = User.generateRandomUser();
+        String street = randomAlphabetic(6);
+        String city = randomAlphabetic(5);
+        String state = randomAlphabetic(7);
+        String country = randomAlphabetic(8);
+        String timezone = "+9:00";
+
+        UserLocation userLocation = new UserLocation();
+
+        userLocation.setStreet(street);
+        userLocation.setCity(city);
+        userLocation.setState(state);
+        userLocation.setCountry(country);
+        userLocation.setTimezone(timezone);
+        user.setLocation(userLocation);
         return user;
     }
 }
