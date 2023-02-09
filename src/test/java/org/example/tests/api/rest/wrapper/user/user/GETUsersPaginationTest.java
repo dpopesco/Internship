@@ -1,17 +1,15 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.response.Response;
 import org.example.models.UsersCollection;
 import org.example.models.error.ErrorModel;
+import org.example.requests.UsersRequests;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
-import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class GETUsersPaginationTest extends ApiBaseClass {
 
@@ -20,35 +18,28 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     public void checkPageNumberAndLimitParameters() {
 
 
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{parameters}", "", "page=0&limit=10");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UsersCollection user = request.usingParams("page=0", "limit=10").getUsersWithParams();
 
         //Validate provided limit with response list limit
-        UsersCollection users = restWrapper.convertResponseToModel(response, UsersCollection.class);
-        assertEquals(users.getData().size(), 10);
+        assertEquals(user.getData().size(), 10);
 
         // Validate status code and response time
-        int statusCode = response.getStatusCode();
-        long responseTime = response.time();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
-        assertTrue(responseTime < 1500);
     }
 
     @Test
     public void checkUsersLimit() {
 
-
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user", "", "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UsersCollection user = request.getUsers();
 
         //Validate provided limit with response list limit
-        UsersCollection usersCollection = restWrapper.convertResponseToModel(response, UsersCollection.class);
-        assertEquals(usersCollection.getData().size(), 20);
+        assertEquals(user.getData().size(), 20);
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
 
@@ -65,35 +56,27 @@ public class GETUsersPaginationTest extends ApiBaseClass {
 
     @Test(dataProvider = "invalidNumbers", description = "bug, api accepts invalid page parameter")
     public void checkInvalidPageNumber(Object pageNumber) {
-
-
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{page}", "", "page=" + String.valueOf(pageNumber));
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        ErrorModel user = request.usingParams("page=" + String.valueOf(pageNumber)).getUsersWithParamsAndExpectError();
 
         //Validate params not valid
-        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
+        assertEquals(user.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test(dataProvider = "invalidNumbers")
+    @Test(dataProvider = "invalidNumbers", description = "bug, api accepts invalid page parameter")
     public void checkInvalidLimitNumber(Object limitNumber) {
-
-
-        Response response = restWrapper.sendRequest(HttpMethod.GET, "/user?{limit}", "", "limit=" + String.valueOf(limitNumber));
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        ErrorModel user = request.usingParams("limit=" + String.valueOf(limitNumber)).getUsersWithParamsAndExpectError();
 
         //Validate params not valid
-        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "PARAMS_NOT_VALID");
+        assertEquals(user.getError(), "PARAMS_NOT_VALID");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 }

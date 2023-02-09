@@ -5,12 +5,11 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import org.apache.commons.lang3.StringUtils;
 import org.example.exceptions.ConversionJsonToModelException;
+import org.example.requests.UsersRequests;
 import org.example.utils.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -23,6 +22,8 @@ public class RestWrapper {
 
     @Autowired
     private Properties properties;
+
+    private int statusCode;
     private RequestSpecBuilder requestSpecBuilder = new RequestSpecBuilder();
 
     @PostConstruct
@@ -41,37 +42,49 @@ public class RestWrapper {
         return this;
     }
 
-    public Response sendRequest(HttpMethod httpMethod, String path, Object body, String params) {
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
+    }
+
+    public Response sendRequest(RestRequest restRequest) {
 
         Response returnedResponse;
 
-        switch (httpMethod) {
+        switch (restRequest.getHttpMethod()) {
             case GET:
-                if (StringUtils.isNotEmpty(params)) {
-                    returnedResponse = onRequest().get(path, params).andReturn();
+                if (restRequest.getPathParams().length != 0) {
+                    returnedResponse = onRequest().get(restRequest.getPath(), restRequest.getPathParams()).andReturn();
                 } else {
-                    returnedResponse = onRequest().get(path).andReturn();
+                    returnedResponse = onRequest().get(restRequest.getPath()).andReturn();
                 }
                 break;
             case POST:
-                if (StringUtils.isNotEmpty(params)) {
-                    returnedResponse = onRequest().body(body).post(path, params).andReturn();
+                RequestSpecification requestSpecification = onRequest();
+                if (restRequest.getBody() != null) {
+                    requestSpecification.body(restRequest.getBody());
+                }
+                if (restRequest.getPathParams().length != 0) {
+                    returnedResponse = requestSpecification.post(restRequest.getPath(), restRequest.getPathParams()).andReturn();
                 } else {
-                    returnedResponse = onRequest().body(body).post(path).andReturn();
+                    returnedResponse = requestSpecification.post(restRequest.getPath()).andReturn();
                 }
                 break;
             case PUT:
-                if (StringUtils.isNotEmpty(params)) {
-                    returnedResponse = onRequest().body(body).put(path, params).andReturn();
+                if (restRequest.getPathParams().length != 0) {
+                    returnedResponse = onRequest().body(restRequest.getBody()).put(restRequest.getPath(), restRequest.getPathParams()).andReturn();
                 } else {
-                    returnedResponse = onRequest().body(body).put(path).andReturn();
+                    returnedResponse = onRequest().body(restRequest.getBody()).put(restRequest.getPath()).andReturn();
                 }
                 break;
             case DELETE:
-                if (StringUtils.isNotEmpty(params)) {
-                    returnedResponse = onRequest().delete(path, params).andReturn();
+                if (restRequest.getPathParams().length != 0) {
+                    returnedResponse = onRequest().delete(restRequest.getPath(), restRequest.getPathParams()).andReturn();
                 } else {
-                    returnedResponse = onRequest().delete(path).andReturn();
+                    returnedResponse = onRequest().delete(restRequest.getPath()).andReturn();
                 }
                 break;
             default:
@@ -84,15 +97,33 @@ public class RestWrapper {
         return given().spec(configureRequestSpec().setContentType(ContentType.JSON).build());
     }
 
-    public <T> T convertResponseToModel(Response response, Class<T> modelClass) {
+    public <T> T processModel(Class<T> modelClass, RestRequest restRequest) {
+        return sendRequestAndCreateModel(modelClass, restRequest);
+    }
+
+    private <T> T sendRequestAndCreateModel(Class<T> modelClass, RestRequest restRequest) {
+        Response returnedResponse = sendRequest(restRequest);
+        logResponse(returnedResponse);
+        setStatusCode(returnedResponse.getStatusCode());
         T model;
 
         try {
-            model = response.getBody().as(modelClass);
+            model = returnedResponse.getBody().as(modelClass);
         } catch (Exception error) {
             error.printStackTrace();
             throw new ConversionJsonToModelException(modelClass, error);
         }
         return model;
+    }
+
+    public void logResponse(Response response) {
+        response.getBody().prettyPrint();
+        System.out.println("Status code: " + response.getStatusCode());
+        System.out.println("Header: " + response.getHeader("content-type"));
+        System.out.println("Response time: " + response.getTime());
+    }
+
+    public UsersRequests usingUsers() {
+        return new UsersRequests(this);
     }
 }

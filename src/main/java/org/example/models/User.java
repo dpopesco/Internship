@@ -29,7 +29,7 @@ public class User {
     @JsonProperty(value = "gender")
     private String gender;
     @JsonProperty(value = "dateOfBirth")
-    private Date dateOfBirth;
+    private String dateOfBirth;
     @JsonProperty(value = "registerDate")
     private Date registerDate;
     @JsonProperty(value = "updatedDate")

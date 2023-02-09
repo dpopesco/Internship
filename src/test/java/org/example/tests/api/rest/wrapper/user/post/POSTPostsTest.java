@@ -1,12 +1,13 @@
 package org.example.tests.api.rest.wrapper.user.post;
 
-import io.restassured.response.Response;
 import org.example.models.PostGET;
 import org.example.models.PostPOST;
 import org.example.models.User;
 import org.example.models.error.ErrorModel;
+import org.example.requests.PostsRequests;
+import org.example.requests.UsersRequests;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
-import org.springframework.http.HttpMethod;
+import org.json.JSONObject;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -20,27 +21,25 @@ public class POSTPostsTest extends ApiBaseClass {
     public void createNewPost() {
 
         User user = User.generateRandomUser();
-        Response responseUser = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-        User userResponseM = restWrapper.convertResponseToModel(responseUser, User.class);
+        UsersRequests requestCreate = new UsersRequests(restWrapper);
+        User responseCreate = requestCreate.createUser(user);
 
         PostPOST post = PostPOST.generateRandomPost();
-        post.setOwnerId(userResponseM.getId());
+        post.setOwnerId(responseCreate.getId());
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/post/create", post, "");
-
-        logResponse(response);
+        PostsRequests request = new PostsRequests(restWrapper);
+        PostGET response = request.createPost(post);
 
         //Validate post is created successfully
-        PostGET postM = restWrapper.convertResponseToModel(response, PostGET.class);
-        assertEquals(postM.getText(), post.getText());
-        assertEquals(postM.getImage(), post.getImage());
-        assertEquals(postM.getLikes(), post.getLikes());
-        assertEquals(postM.getTags(), post.getTags());
-        assertEquals(postM.getUser().getId(), post.getOwnerId());
+        assertEquals(response.getText(), post.getText());
+        assertEquals(response.getImage(), post.getImage());
+        assertEquals(response.getLikes(), post.getLikes());
+        assertEquals(response.getTags(), post.getTags());
+        assertEquals(response.getUser().getId(), post.getOwnerId());
 
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
@@ -57,20 +56,19 @@ public class POSTPostsTest extends ApiBaseClass {
     public void createPost(PostPOST post) {
 
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/post/create", post, "");
 
-        logResponse(response);
+        PostsRequests request = new PostsRequests(restWrapper);
+        PostGET response = request.createPost(post);
 
         //Validate post is created successfully
-        PostGET postM = restWrapper.convertResponseToModel(response, PostGET.class);
-        assertEquals(postM.getText(), post.getText());
-        assertEquals(postM.getImage(), post.getImage());
-        assertEquals(postM.getLikes(), post.getLikes());
-        assertEquals(postM.getTags(), post.getTags());
-        assertEquals(postM.getUser().getId(), post.getOwnerId());
+        assertEquals(response.getText(), post.getText());
+        assertEquals(response.getImage(), post.getImage());
+        assertEquals(response.getLikes(), post.getLikes());
+        assertEquals(response.getTags(), post.getTags());
+        assertEquals(response.getUser().getId(), post.getOwnerId());
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
@@ -80,16 +78,14 @@ public class POSTPostsTest extends ApiBaseClass {
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
         post.setText(randomAlphanumeric(1001));
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/post/create", post, "");
-
-        logResponse(response);
+        PostsRequests request = new PostsRequests(restWrapper);
+        ErrorModel response = request.createPostWithFailure(post);
 
         //Validate post is created successfully
-        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(response.getError(), "BODY_NOT_VALID");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -97,15 +93,31 @@ public class POSTPostsTest extends ApiBaseClass {
     public void createPostWithoutOwnerId() {
         PostPOST post = new PostPOST();
         post.setText("hgjf");
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/post/create", post, "");
 
-        logResponse(response);
+        PostsRequests request = new PostsRequests(restWrapper);
+        ErrorModel response = request.createPostWithFailure(post);
         //Validate post is created successfully
-        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
+        assertEquals(response.getError(), "BODY_NOT_VALID");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void createPostWithCharactersForLikes() {
+        PostPOST post = new PostPOST();
+        JSONObject postS = new JSONObject(post);
+
+        postS.put("likes", "rfr");
+
+        PostsRequests request = new PostsRequests(restWrapper);
+        ErrorModel response = request.createPostWithJson(postS.toString());
+        //Validate post is created successfully
+        assertEquals(response.getError(), "BODY_NOT_VALID");
+
+        // Validate status code
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 }

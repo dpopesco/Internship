@@ -1,6 +1,5 @@
 package org.example.tests.api.rest.wrapper.user;
 
-import io.restassured.response.Response;
 import org.example.utils.Properties;
 import org.example.utils.TestContext;
 import org.example.wrappers.RestWrapper;
@@ -24,12 +23,5 @@ public abstract class ApiBaseClass extends AbstractTestNGSpringContextTests {
     @BeforeClass(alwaysRun = true)
     public void addHeader() {
         restWrapper.addRequestHeader("app-id", properties.getAppId());
-    }
-
-    public void logResponse(Response response) {
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
     }
 }

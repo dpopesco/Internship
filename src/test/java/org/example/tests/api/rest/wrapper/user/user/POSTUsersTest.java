@@ -1,15 +1,13 @@
 package org.example.tests.api.rest.wrapper.user.user;
 
-import io.restassured.response.Response;
 import org.example.enums.Gender;
 import org.example.enums.Title;
 import org.example.models.User;
 import org.example.models.UserLocation;
 import org.example.models.error.ErrorModel;
 import org.example.models.error.UserErrorModel;
+import org.example.requests.UsersRequests;
 import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
-import org.json.JSONObject;
-import org.springframework.http.HttpMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -31,58 +29,51 @@ public class POSTUsersTest extends ApiBaseClass {
 
     @Test(dataProvider = "userMandatoryFields")
     public void createUsers(User user) {
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        User userResponse = request.createUser(user);
 
         //Validate user is created successfully
-        User userM = restWrapper.convertResponseToModel(response, User.class);
 
-        assertEquals(userM.getFirstName(), user.getFirstName());
-        assertEquals(userM.getLastName(), user.getLastName());
-        assertEquals(userM.getEmail(), user.getEmail().toLowerCase());
+        assertEquals(userResponse.getFirstName(), user.getFirstName());
+        assertEquals(userResponse.getLastName(), user.getLastName());
+        assertEquals(userResponse.getEmail(), user.getEmail().toLowerCase());
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
     @Test
     public void createNewUser() {
 
+        UsersRequests request = new UsersRequests(restWrapper);
         User user = User.generateRandomUser();
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        User userResponse = request.createUser(user);
 
         //Validate user is created successfully
-        User userM = restWrapper.convertResponseToModel(response, User.class);
-        assertEquals(userM.getFirstName(), user.getFirstName());
-        assertEquals(userM.getLastName(), user.getLastName());
-        assertEquals(userM.getEmail(), user.getEmail().toLowerCase());
+        assertEquals(userResponse.getFirstName(), user.getFirstName());
+        assertEquals(userResponse.getLastName(), user.getLastName());
+        assertEquals(userResponse.getEmail(), user.getEmail().toLowerCase());
 
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
     @Test
     public void createNewUserUsingExistingEmail() {
 
+        UsersRequests request = new UsersRequests(restWrapper);
         User user = User.generateAlreadyRegisteredUser();
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate email already used error
-        UserErrorModel responseE = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(responseE.getError(), "BODY_NOT_VALID");
-        assertEquals(responseE.getData().getEmail(), "Email already used");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getEmail(), "Email already used");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -90,82 +81,70 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserUsingSpacesForMandatoryFields() {
 
+        UsersRequests request = new UsersRequests(restWrapper);
         User emptyUser = new User(" ", " ", " ");
         emptyUser.setGender(Gender.FEMALE.getUserGender());
         emptyUser.setTitle(Title.MISS.getUserTitle());
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", emptyUser, "");
-
-        logResponse(response);
+        UserErrorModel userResponse = request.createUserWithFailure(emptyUser);
 
         //Validate spaces for mandatory fields not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
-        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
-        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getEmail(), "Path `email` is required.");
+        assertEquals(userResponse.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(userResponse.getData().getLastName(), "Path `lastName` is required.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
     @Test
     public void createNewUserWithInvalidEmail() {
 
+        UsersRequests request = new UsersRequests(restWrapper);
         User userInvalid = new User("Mariana", "Ricky", "mariana@mail");
         userInvalid.setGender(Gender.FEMALE.getUserGender());
         userInvalid.setTitle(Title.MISS.getUserTitle());
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userInvalid, "");
-
-        logResponse(response);
+        UserErrorModel userResponse = request.createUserWithFailure(userInvalid);
 
         //Validate invalid email structure not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is invalid (mariana@mail).");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getEmail(), "Path `email` is invalid (mariana@mail).");
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
     @Test
     public void createNewUserWithMissingMandatoryFields() {
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", "", "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithoutBody();
 
         //Validate user isn't created without mandatory fields entered
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
-        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
-        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getEmail(), "Path `email` is required.");
+        assertEquals(userResponse.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(userResponse.getData().getLastName(), "Path `lastName` is required.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
     @Test(description = "bug, user is created with xss injection")
     public void createNewUserUsingXSSForFirstName() {
 
+        UsersRequests request = new UsersRequests(restWrapper);
         User user = User.generateRandomUser();
         user.setFirstName("<script>alert(\\'H\\')</script>");
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate user is not created when entering xss script for firstName field
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is invalid (<script>alert('H')</script>).");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getFirstName(), "Path `firstName` is invalid (<script>alert('H')</script>).");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -178,19 +157,17 @@ public class POSTUsersTest extends ApiBaseClass {
         user.setTitle(Title.MISS.getUserTitle());
         user.setGender(Gender.FEMALE.getUserGender());
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate empty mandatory fields not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` is required.");
-        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` is required.");
-        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` is required.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getEmail(), "Path `email` is required.");
+        assertEquals(userResponse.getData().getFirstName(), "Path `firstName` is required.");
+        assertEquals(userResponse.getData().getLastName(), "Path `lastName` is required.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -198,105 +175,87 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithoutAuthorization() {
 
         User user = new User("Ella", "Miro", "ella@mail.com");
-
-        Response response = restWrapperWithoutAuth.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
-
+        UsersRequests request = new UsersRequests(restWrapperWithoutAuth);
+        ErrorModel userResponse = request.createUserWithFailure(user);
         //Validate user not created without app-id
-        ErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, ErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "APP_ID_MISSING");
+        assertEquals(userResponse.getError(), "APP_ID_MISSING");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapperWithoutAuth.getStatusCode();
         assertEquals(statusCode, SC_FORBIDDEN);
     }
 
     @Test
     public void createNewUserWithFirstNameLongerThan30Char() {
         User user = User.generateRandomUser();
-
         String firstName = randomAlphabetic(31);
         user.setFirstName(firstName);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate firstName longer than 30
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
-
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
     @Test
     public void createNewUserWithLastNameLongerThan30Char() {
         User user = User.generateRandomUser();
-
         String lastName = randomAlphabetic(31);
         user.setLastName(lastName);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate lastName longer than 30
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test(description = "server error 502")
+    @Test(description = "server error 504")
     public void createNewUserWithEmailLongerThan50Char() {
         User user = User.generateRandomUser();
-
         String email = randomAlphabetic(51);
         user.setEmail(email);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate email longer than 50
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getEmail(), "Path `email` (`" + email + "`) is longer than the maximum allowed length (50).");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getEmail(), "Path `email` (`" + email + "`) is longer than the maximum allowed length (50).");
 
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    //to revisit
     @Test
     public void createNewUserWithWrongTitleFormat() {
 
         User user = User.generateRandomUser();
-
         user.setTitle("unknown");
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate wrong title not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -304,20 +263,16 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithId() {
 
         User user = User.generateRandomUser();
+        user.setId(randomNumeric(6));
 
-        user.setEmail(randomNumeric(6));
-
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        User userResponse = request.createUser(user);
 
         //Validate autogenerated id is created, instead of the one passed
-        User userM = restWrapper.convertResponseToModel(response, User.class);
-        assertNotEquals(userM.getId(), user.getId());
-
+        assertNotEquals(userResponse.getId(), user.getId());
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
@@ -325,42 +280,36 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithCharactersForPhone() {
 
         User user = User.generateRandomUser();
-
         user.setPhone(randomAlphabetic(9));
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate characters for phone not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getPhone(), "Path `phone` is invalid.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getPhone(), "Path `phone` is invalid.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
+    //to revisit
     @Test
     public void createUserWithInvalidDateOfBirth() {
 
         User user = User.generateRandomUser();
-        JSONObject userS = new JSONObject(user);
+        user.setDateOfBirth("now");
 
-        userS.put("dateOfBirth", "now");
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userS.toString(), "");
-
-        logResponse(response);
-
-        //Validate user's email is not updated
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
+        //Validate date of birth now not allowed
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -369,44 +318,38 @@ public class POSTUsersTest extends ApiBaseClass {
 
         User userWithLocation = User.generateUserWithLocation();
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userWithLocation, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        User userResponse = request.createUser(userWithLocation);
 
         //Validate location information created
-        User userM = restWrapper.convertResponseToModel(response, User.class);
-        assertEquals(userM.getLocation().getStreet(), userWithLocation.getLocation().getStreet());
-        assertEquals(userM.getLocation().getCity(), userWithLocation.getLocation().getCity());
-        assertEquals(userM.getLocation().getState(), userWithLocation.getLocation().getState());
-        assertEquals(userM.getLocation().getCountry(), userWithLocation.getLocation().getCountry());
-        assertEquals(userM.getLocation().getTimezone(), userWithLocation.getLocation().getTimezone());
+        assertEquals(userResponse.getLocation().getStreet(), userWithLocation.getLocation().getStreet());
+        assertEquals(userResponse.getLocation().getCity(), userWithLocation.getLocation().getCity());
+        assertEquals(userResponse.getLocation().getState(), userWithLocation.getLocation().getState());
+        assertEquals(userResponse.getLocation().getCountry(), userWithLocation.getLocation().getCountry());
+        assertEquals(userResponse.getLocation().getTimezone(), userWithLocation.getLocation().getTimezone());
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
 
-    @Test
+    @Test(description = "Bug, api accepts characters for timezone")
     public void createNewUserWithWrongTimezone() {
 
         User userL = User.generateUserWithLocation();
-
         String timezone = randomAlphanumeric(4);
-
         UserLocation location = userL.getLocation();
         location.setTimezone(timezone);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", userL, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(userL);
 
         //Validate invalid timezone format not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
@@ -414,21 +357,18 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserWithInvalidGender() {
 
         User user = User.generateRandomUser();
-
         String gender = randomAlphanumeric(4);
         user.setGender(gender);
 
-        Response response = restWrapper.sendRequest(HttpMethod.POST, "/user/create", user, "");
-
-        logResponse(response);
+        UsersRequests request = new UsersRequests(restWrapper);
+        UserErrorModel userResponse = request.createUserWithFailure(user);
 
         //Validate invalid gender format not allowed
-        UserErrorModel errorResponseModel = restWrapper.convertResponseToModel(response, UserErrorModel.class);
-        assertEquals(errorResponseModel.getError(), "BODY_NOT_VALID");
-        assertEquals(errorResponseModel.getData().getGender(), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
+        assertEquals(userResponse.getError(), "BODY_NOT_VALID");
+        assertEquals(userResponse.getData().getGender(), "`" + gender + "`" + " is not a valid enum value for path `gender`.");
 
         // Validate status code
-        int statusCode = response.getStatusCode();
+        int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 }
