@@ -1,12 +1,11 @@
-package org.example.tests.api.rest.wrapper.user.post;
+package org.example.tests.api.rest.wrapper.post;
 
-import org.example.models.PostGET;
-import org.example.models.PostPOST;
-import org.example.models.User;
+import lombok.extern.slf4j.Slf4j;
 import org.example.models.error.ErrorModel;
-import org.example.requests.PostsRequests;
-import org.example.requests.UsersRequests;
-import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
+import org.example.models.post.PostGET;
+import org.example.models.post.PostPOST;
+import org.example.models.user.User;
+import org.example.tests.api.rest.wrapper.ApiBaseClass;
 import org.json.JSONObject;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -16,21 +15,20 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.testng.Assert.assertEquals;
 
+@Slf4j
 public class POSTPostsTest extends ApiBaseClass {
     @Test
     public void createNewPost() {
 
         User user = User.generateRandomUser();
-        UsersRequests requestCreate = new UsersRequests(restWrapper);
-        User responseCreate = requestCreate.createUser(user);
+        User responseCreate = restWrapper.usingUsers().createUser(user);
 
         PostPOST post = PostPOST.generateRandomPost();
         post.setOwnerId(responseCreate.getId());
 
-        PostsRequests request = new PostsRequests(restWrapper);
-        PostGET response = request.createPost(post);
+        PostGET response = restWrapper.usingPosts().createPost(post);
 
-        //Validate post is created successfully
+        log.info("Validate post is created successfully!");
         assertEquals(response.getText(), post.getText());
         assertEquals(response.getImage(), post.getImage());
         assertEquals(response.getLikes(), post.getLikes());
@@ -38,7 +36,7 @@ public class POSTPostsTest extends ApiBaseClass {
         assertEquals(response.getUser().getId(), post.getOwnerId());
 
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
@@ -57,17 +55,16 @@ public class POSTPostsTest extends ApiBaseClass {
 
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
 
-        PostsRequests request = new PostsRequests(restWrapper);
-        PostGET response = request.createPost(post);
+        PostGET response = restWrapper.usingPosts().createPost(post);
 
-        //Validate post is created successfully
+        log.info("Validate post is created successfully!");
         assertEquals(response.getText(), post.getText());
         assertEquals(response.getImage(), post.getImage());
         assertEquals(response.getLikes(), post.getLikes());
         assertEquals(response.getTags(), post.getTags());
         assertEquals(response.getUser().getId(), post.getOwnerId());
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_CREATED);
     }
@@ -78,13 +75,14 @@ public class POSTPostsTest extends ApiBaseClass {
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
         post.setText(randomAlphanumeric(1001));
 
-        PostsRequests request = new PostsRequests(restWrapper);
-        ErrorModel response = request.createPostWithFailure(post);
+        log.info("Validate post is not created as text has more than 1000 characters!");
+        log.error("Bug, api accepts text bigger than 1000!");
 
-        //Validate post is created successfully
+        ErrorModel response = restWrapper.usingPosts().createPostWithFailure(post);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -94,12 +92,12 @@ public class POSTPostsTest extends ApiBaseClass {
         PostPOST post = new PostPOST();
         post.setText("hgjf");
 
-        PostsRequests request = new PostsRequests(restWrapper);
-        ErrorModel response = request.createPostWithFailure(post);
-        //Validate post is created successfully
+        ErrorModel response = restWrapper.usingPosts().createPostWithFailure(post);
+
+        log.info("Validate post cannot be created without ownerId!");
         assertEquals(response.getError(), "BODY_NOT_VALID");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -108,15 +106,40 @@ public class POSTPostsTest extends ApiBaseClass {
     public void createPostWithCharactersForLikes() {
         PostPOST post = new PostPOST();
         JSONObject postS = new JSONObject(post);
-
         postS.put("likes", "rfr");
 
-        PostsRequests request = new PostsRequests(restWrapper);
-        ErrorModel response = request.createPostWithJson(postS.toString());
-        //Validate post is created successfully
+        ErrorModel response = restWrapper.usingPosts().createPostWithFailure(postS.toString());
+
+        log.info("Validate post cannot be created when sent characters for number of likes!");
         assertEquals(response.getError(), "BODY_NOT_VALID");
 
-        // Validate status code
+        log.info("Validate status code!");
+        int statusCode = restWrapper.getStatusCode();
+        assertEquals(statusCode, SC_BAD_REQUEST);
+    }
+
+    @DataProvider(name = "invalidData")
+    public Object[][] createInvalidData() {
+        return new Object[][]{
+                {10.5},
+                {-1},
+                {-10.5},
+        };
+    }
+
+    @Test(dataProvider = "invalidData")
+    public void createPostWithInvalidDataForLikes(Object likes) {
+
+        PostPOST post = new PostPOST();
+        JSONObject postS = new JSONObject(post);
+        postS.put("likes", likes);
+
+        ErrorModel response = restWrapper.usingPosts().createPostWithFailure(postS.toString());
+
+        log.info("Validate post cannot be created when sent double type and negative figures for number of likes!");
+        assertEquals(response.getError(), "BODY_NOT_VALID");
+
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }

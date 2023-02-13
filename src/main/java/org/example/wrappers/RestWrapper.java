@@ -5,7 +5,10 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import lombok.extern.slf4j.Slf4j;
 import org.example.exceptions.ConversionJsonToModelException;
+import org.example.requests.CommentsRequests;
+import org.example.requests.PostsRequests;
 import org.example.requests.UsersRequests;
 import org.example.utils.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +21,7 @@ import static io.restassured.RestAssured.given;
 
 @Service
 @Scope(value = "prototype")
+@Slf4j
 public class RestWrapper {
 
     @Autowired
@@ -124,6 +128,17 @@ public class RestWrapper {
     }
 
     public UsersRequests usingUsers() {
+        log.info("Entering method where we are creating User Request object!");
         return new UsersRequests(this);
+    }
+
+    public PostsRequests usingPosts() {
+        log.info("Entering method where we are creating Post Request object!");
+        return new PostsRequests(this);
+    }
+
+    public CommentsRequests usingComments() {
+        log.info("Entering method where we are creating Comment Request object!");
+        return new CommentsRequests(this);
     }
 }

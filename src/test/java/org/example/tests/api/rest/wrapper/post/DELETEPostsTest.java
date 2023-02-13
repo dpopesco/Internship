@@ -1,36 +1,36 @@
-package org.example.tests.api.rest.wrapper.user.post;
+package org.example.tests.api.rest.wrapper.post;
 
-import org.example.models.PostGET;
-import org.example.models.PostPOST;
+import lombok.extern.slf4j.Slf4j;
 import org.example.models.error.ErrorModel;
-import org.example.requests.PostsRequests;
-import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
+import org.example.models.post.PostGET;
+import org.example.models.post.PostPOST;
+import org.example.tests.api.rest.wrapper.ApiBaseClass;
 import org.testng.annotations.Test;
 
 import static org.apache.http.HttpStatus.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
+@Slf4j
 public class DELETEPostsTest extends ApiBaseClass {
     @Test
     public void deletePost() {
 
-        //create new user
+        log.info("New post is created!");
         PostPOST post = PostPOST.generateRandomPost();
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
-        PostsRequests request = new PostsRequests(restWrapper);
-        PostGET response = request.createPost(post);
 
-        //save created id from response
+        PostGET response = restWrapper.usingPosts().createPost(post);
+
+        log.info("Created id from response is saved!");
         String createdId = response.getId();
 
-        PostsRequests requestDelete = new PostsRequests(restWrapper);
-        PostPOST responseDelete = requestDelete.deletePost(createdId);
+        PostPOST responseDelete = restWrapper.usingPosts().deletePost(createdId);
 
-        //Validate user is deleted successfully
+        log.info("Validate post is deleted successfully!");
         assertNull(responseDelete.getLink());
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -40,13 +40,12 @@ public class DELETEPostsTest extends ApiBaseClass {
 
         String postId = "63e1f94ab6c1a123d203959a";
 
-        PostsRequests requestDelete = new PostsRequests(restWrapper);
-        ErrorModel responseDelete = requestDelete.deletePostWithFailure(postId);
+        ErrorModel responseDelete = restWrapper.usingPosts().deletePostWithFailure(postId);
 
-        //Validate user is deleted successfully
+        log.info("Validate already deleted post is not found!");
         assertEquals(responseDelete.getError(), "RESOURCE_NOT_FOUND");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_NOT_FOUND);
     }
@@ -56,13 +55,12 @@ public class DELETEPostsTest extends ApiBaseClass {
 
         String postId = "63e1f94a";
 
-        PostsRequests requestDelete = new PostsRequests(restWrapper);
-        ErrorModel responseDelete = requestDelete.deletePostWithFailure(postId);
+        ErrorModel responseDelete = restWrapper.usingPosts().deletePostWithFailure(postId);
 
-        //Validate user is deleted successfully
+        log.info("Validate post is not deleted because of invalid postId!");
         assertEquals(responseDelete.getError(), "PARAMS_NOT_VALID");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -72,13 +70,12 @@ public class DELETEPostsTest extends ApiBaseClass {
 
         String postId = "63e1f94ab6c1a123d203959a";
 
-        PostsRequests requestDelete = new PostsRequests(restWrapperWithoutAuth);
-        ErrorModel responseDelete = requestDelete.deletePostWithFailure(postId);
+        ErrorModel responseDelete = restWrapperWithoutAuth.usingPosts().deletePostWithFailure(postId);
 
-        //Validate user is deleted successfully
+        log.info("Validate post is not deleted as app id is missing!");
         assertEquals(responseDelete.getError(), "APP_ID_MISSING");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapperWithoutAuth.getStatusCode();
         assertEquals(statusCode, SC_FORBIDDEN);
     }

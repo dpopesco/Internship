@@ -1,11 +1,12 @@
-package org.example.tests.api.rest.wrapper.user.user;
+package org.example.tests.api.rest.wrapper.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.enums.Title;
-import org.example.models.User;
-import org.example.models.UserLocation;
 import org.example.models.error.UserErrorModel;
-import org.example.requests.UsersRequests;
-import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
+import org.example.models.user.User;
+import org.example.models.user.UserLocation;
+import org.example.tests.api.rest.wrapper.ApiBaseClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.apache.commons.lang3.RandomStringUtils.*;
@@ -13,7 +14,7 @@ import static org.apache.http.HttpStatus.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
-
+@Slf4j
 public class PUTUsersTest extends ApiBaseClass {
     @Test
     public void updateUser() {
@@ -23,14 +24,14 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setLastName(randomAlphabetic(5));
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        User response = request.updateUser(user, userId);
 
-        //Validate user is updated successfully
+        User response = restWrapper.usingUsers().updateUser(user, userId);
+
+        log.info("Validate user is updated successfully!");
         assertEquals(response.getFirstName(), user.getFirstName());
         assertEquals(response.getLastName(), user.getLastName());
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -42,13 +43,13 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setEmail(randomAlphanumeric(4) + "@mail.com");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        User response = request.updateUser(user, userId);
 
-        //Validate user's email is not updated
+        User response = restWrapper.usingUsers().updateUser(user, userId);
+
+        log.info("Validate user's email is not updated!");
         assertNotEquals(response.getEmail(), user.getEmail());
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -72,17 +73,17 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setLocation(userLocation);
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        User response = request.updateUser(user, userId);
 
-        //Validate location information updated
+        User response = restWrapper.usingUsers().updateUser(user, userId);
+
+        log.info("Validate location information is updated!");
         assertEquals(response.getLocation().getStreet(), street);
         assertEquals(response.getLocation().getCity(), city);
         assertEquals(response.getLocation().getState(), state);
         assertEquals(response.getLocation().getCountry(), country);
         assertEquals(response.getLocation().getTimezone(), timezone);
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -94,32 +95,43 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setTitle(Title.DR.getUserTitle());
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        User response = request.updateUser(user, userId);
 
-        //Validate user's email is not updated
+        User response = restWrapper.usingUsers().updateUser(user, userId);
+
+        log.info("Validate user's title is updated!");
         assertEquals(response.getTitle(), user.getTitle());
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
 
-    @Test(description = "bug, api accepts to put `now` as value for dateOfBirth field")
-    public void updateUserWithInvalidDateOfBirth() {
+    @DataProvider(name = "invalidDateOfBirth")
+    public Object[][] createInvalidData() {
+        return new Object[][]{
+                {"31/12/1899"},
+                {"31/12/2050"},
+                {"now"}
+        };
+    }
+
+    @Test(dataProvider = "invalidDateOfBirth", description = "bug, api accepts to put invalid date as value for dateOfBirth field")
+    public void updateUserWithInvalidDateOfBirth(String invalidDate) {
 
         User user = new User();
-        user.setDateOfBirth("now");
+        user.setDateOfBirth(invalidDate);
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
 
-        //Validate user's date of birth not updated
+        log.info("Validate user's date of birth not updated!");
+        log.error("Bug, api accepts to put invalid dateOfBirth");
+
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
-        assertEquals(response.getData().getDateOfBirth(), "Cast to date failed for value \"now\" (type string) at path \"dateOfBirth\"");
+        assertEquals(response.getData().getDateOfBirth(), "Cast to date failed for value \"" + invalidDate + "\" (type string) at path \"dateOfBirth\"");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -131,14 +143,15 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setPhone(randomAlphabetic(9));
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
 
-        //Validate characters for phone not allowed
+        log.info("Validate characters for phone not allowed!");
+        log.error("Bug, api accepts to put characters for phone field!");
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getPhone(), "Path `phone` is invalid.");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -154,14 +167,16 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setLocation(userLocation);
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
 
-        //Validate invalid timezone format not allowed
+        log.info("Validate invalid timezone format not allowed!");
+        log.error("Bug, api accepts to put characters for timezone field!");
+
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -173,15 +188,16 @@ public class PUTUsersTest extends ApiBaseClass {
         String gender = randomAlphanumeric(4);
         user.setGender(gender);
 
-        String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
+        log.info("Validate invalid gender format not allowed!");
+        log.error("Bug, api accepts to put invalid gender value!");
 
-        //Validate invalid gender format not allowed
+        String userId = "60d0fe4f5311236168a109cb";
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getGender(), "`" + gender + "` is not a valid enum value for path `gender`.");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -193,16 +209,18 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setFirstName(" ");
         user.setLastName(" ");
 
-        String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
+        log.info("Validate empty mandatory fields not allowed!");
+        log.error("Bug, user can be updated with spaces for mandatory fields!");
 
-        //Validate empty mandatory fields not allowed
+        String userId = "60d0fe4f5311236168a109cb";
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getFirstName(), "Path `firstName` is required.");
         assertEquals(response.getData().getLastName(), "Path `lastName` is required.");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -215,14 +233,14 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setLastName("");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        User response = request.updateUser(user, userId);
 
-        //Validate empty mandatory fields not allowed
+        User response = restWrapper.usingUsers().updateUser(user, userId);
+
+        log.info("Validate empty mandatory fields not allowed!");
         assertEquals(response.getFirstName(), "Edita");
         assertEquals(response.getLastName(), "Vestering");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -234,13 +252,13 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setFirstName("D");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapperWithoutAuth);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
 
-        //Validate user not updated without app-id
+        UserErrorModel response = restWrapperWithoutAuth.usingUsers().updateUserWithFailure(user, userId);
+
+        log.info("Validate user not updated without app-id!");
         assertEquals(response.getError(), "APP_ID_MISSING");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapperWithoutAuth.getStatusCode();
         assertEquals(statusCode, SC_FORBIDDEN);
     }
@@ -252,15 +270,16 @@ public class PUTUsersTest extends ApiBaseClass {
         String firstName = randomAlphabetic(31);
         user.setFirstName(firstName);
 
-        String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
+        log.info("Validate firstName longer than 30 not allowed!");
+        log.error("Bug, api accepts to update firstName bigger than 30 characters!");
 
-        //Validate firstName longer than 30
+        String userId = "60d0fe4f5311236168a109cb";
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -272,35 +291,36 @@ public class PUTUsersTest extends ApiBaseClass {
         String lastName = randomAlphabetic(31);
         user.setLastName(lastName);
 
-        String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
+        log.info("Validate lastName longer than 30 not allowed!");
+        log.error("Bug, api accepts to update lastName bigger than 30 characters!");
 
-        //Validate lastName longer than 30
+        String userId = "60d0fe4f5311236168a109cb";
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
 
-
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
-    @Test(description = "bug, api accepts to update with invalid title ")
+    @Test(description = "bug, api accepts to update with invalid title")
     public void updateUserWithWrongTitleFormat() {
 
         User user = new User();
         user.setTitle("unknown");
 
-        String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        UserErrorModel response = request.updateUserWithFailure(user, userId);
+        log.info("Validate wrong title not allowed!");
+        log.error("Bug, api accepts to update with invalid title!");
 
-        //Validate wrong title not allowed
+        String userId = "60d0fe4f5311236168a109cb";
+        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
@@ -312,13 +332,13 @@ public class PUTUsersTest extends ApiBaseClass {
         user.setId(randomNumeric(6));
 
         String userId = "60d0fe4f5311236168a109cb";
-        UsersRequests request = new UsersRequests(restWrapper);
-        User response = request.updateUser(user, userId);
 
-        //Validate autogenerated id remained, instead of the one passed
+        User response = restWrapper.usingUsers().updateUser(user, userId);
+
+        log.info("Validate autogenerated id remained, instead of the one passed!");
         assertNotEquals(response.getId(), user.getId());
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }

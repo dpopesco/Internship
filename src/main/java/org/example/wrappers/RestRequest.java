@@ -2,10 +2,12 @@ package org.example.wrappers;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 
 @Getter
 @Setter
+@Slf4j
 public class RestRequest {
     private Object body;
     private HttpMethod httpMethod;
@@ -26,10 +28,12 @@ public class RestRequest {
     }
 
     public static RestRequest simpleRequest(HttpMethod httpMethod, String path, String... pathParams) {
+        log.trace("Entering simple request!");
         return new RestRequest(httpMethod, path, pathParams);
     }
 
     public static RestRequest requestWithBody(HttpMethod httpMethod, Object body, String path, String... pathParams) {
+        log.trace("Entering request with body!");
         return new RestRequest(httpMethod, body, path, pathParams);
     }
 }

@@ -1,9 +1,9 @@
-package org.example.tests.api.rest.wrapper.user.user;
+package org.example.tests.api.rest.wrapper.user;
 
-import org.example.models.UsersCollection;
+import lombok.extern.slf4j.Slf4j;
 import org.example.models.error.ErrorModel;
-import org.example.requests.UsersRequests;
-import org.example.tests.api.rest.wrapper.user.ApiBaseClass;
+import org.example.models.user.UsersCollection;
+import org.example.tests.api.rest.wrapper.ApiBaseClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -11,20 +11,19 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.testng.Assert.assertEquals;
 
+@Slf4j
 public class GETUsersPaginationTest extends ApiBaseClass {
 
 
     @Test
     public void checkPageNumberAndLimitParameters() {
 
+        UsersCollection user = restWrapper.usingUsers().usingParams("page=0", "limit=10").getUsers();
 
-        UsersRequests request = new UsersRequests(restWrapper);
-        UsersCollection user = request.usingParams("page=0", "limit=10").getUsersWithParams();
-
-        //Validate provided limit with response list limit
+        log.info("Validate provided limit with response list limit");
         assertEquals(user.getData().size(), 10);
 
-        // Validate status code and response time
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -32,13 +31,12 @@ public class GETUsersPaginationTest extends ApiBaseClass {
     @Test
     public void checkUsersLimit() {
 
-        UsersRequests request = new UsersRequests(restWrapper);
-        UsersCollection user = request.getUsers();
+        UsersCollection user = restWrapper.usingUsers().getUsers();
 
-        //Validate provided limit with response list limit
+        log.info("Validate provided limit with response list limit");
         assertEquals(user.getData().size(), 20);
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
     }
@@ -56,26 +54,28 @@ public class GETUsersPaginationTest extends ApiBaseClass {
 
     @Test(dataProvider = "invalidNumbers", description = "bug, api accepts invalid page parameter")
     public void checkInvalidPageNumber(Object pageNumber) {
-        UsersRequests request = new UsersRequests(restWrapper);
-        ErrorModel user = request.usingParams("page=" + String.valueOf(pageNumber)).getUsersWithParamsAndExpectError();
 
-        //Validate params not valid
+        ErrorModel user = restWrapper.usingUsers().usingParams("page=" + String.valueOf(pageNumber)).getUsersWithParamsAndExpectError();
+
+        log.info("Validate params not valid");
         assertEquals(user.getError(), "PARAMS_NOT_VALID");
 
-        // Validate status code
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
 
     @Test(dataProvider = "invalidNumbers", description = "bug, api accepts invalid page parameter")
     public void checkInvalidLimitNumber(Object limitNumber) {
-        UsersRequests request = new UsersRequests(restWrapper);
-        ErrorModel user = request.usingParams("limit=" + String.valueOf(limitNumber)).getUsersWithParamsAndExpectError();
 
-        //Validate params not valid
+        ErrorModel user = restWrapper.usingUsers().usingParams("limit=" + String.valueOf(limitNumber)).getUsersWithParamsAndExpectError();
+
+        log.info("Validate status code!");
         assertEquals(user.getError(), "PARAMS_NOT_VALID");
 
-        // Validate status code
+        log.error("BUG, api accepts invalid page parameter");
+
+        log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_BAD_REQUEST);
     }
