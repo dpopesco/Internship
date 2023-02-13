@@ -14,13 +14,11 @@ import static org.testng.Assert.assertNull;
 public class DELETEUsersTest extends ApiBaseClass {
 
     @Test
-    public void deleteUser() {
+    public String deleteUser() {
 
-        log.info("New user is created!");
         User user = User.generateRandomUser();
         User response = restWrapper.usingUsers().createUser(user);
 
-        log.info("Created id from create response is saved!");
         String createdId = response.getId();
 
         User responseDelete = restWrapper.usingUsers().deleteUser(createdId);
@@ -31,13 +29,15 @@ public class DELETEUsersTest extends ApiBaseClass {
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
+        return createdId;
     }
 
     @Test
     public void deleteAlreadyDeletedUser() {
 
+        String deletedUser = deleteUser();
 
-        ErrorModel response = restWrapper.usingUsers().deleteUserWithFailure("60d0fe4f5311236168a109ca");
+        ErrorModel response = restWrapper.usingUsers().deleteUserWithFailure(deletedUser);
 
         log.info("Validate already deleted user is not found!");
         assertEquals(response.getError(), "RESOURCE_NOT_FOUND");
@@ -49,7 +49,6 @@ public class DELETEUsersTest extends ApiBaseClass {
 
     @Test
     public void deleteUserWithInvalidId() {
-
 
         ErrorModel response = restWrapper.usingUsers().deleteUserWithFailure("9576445");
 

@@ -33,7 +33,7 @@ public class GETUsersPaginationTest extends ApiBaseClass {
 
         UsersCollection user = restWrapper.usingUsers().getUsers();
 
-        log.info("Validate provided limit with response list limit");
+        log.info("Validate default response limit!");
         assertEquals(user.getData().size(), 20);
 
         log.info("Validate status code!");

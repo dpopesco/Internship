@@ -1,19 +1,18 @@
 package org.example.tests.api.rest.wrapper;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.utils.PlainTextReporter;
 import org.example.utils.Properties;
 import org.example.utils.TestContext;
 import org.example.wrappers.RestWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.*;
 
 @Slf4j
 @ContextConfiguration(classes = TestContext.class)
+@Listeners(PlainTextReporter.class)
 public abstract class ApiBaseClass extends AbstractTestNGSpringContextTests {
 
     @Autowired

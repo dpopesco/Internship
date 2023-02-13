@@ -289,6 +289,7 @@ public class POSTUsersTest extends ApiBaseClass {
         return new Object[][]{
                 {"31/12/1899"},
                 {"31/12/2050"},
+                {"29/02/2022"},
                 {"now"}
         };
     }

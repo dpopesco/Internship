@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.testng.Assert.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.Assert.assertTrue;
 
 @Slf4j
 public class GETPostsTest extends ApiBaseClass {
@@ -45,7 +45,7 @@ public class GETPostsTest extends ApiBaseClass {
         PostsCollection response = restWrapper.usingPosts().getInfoByUserId(id);
 
         log.info("Validate response owner id as per request!");
-        assertEquals(response.getData().get(0).getUser().getId(), id);
+        assertTrue(response.getData().stream().allMatch(x -> x.getUser().getId().equals(id)));
 
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
@@ -60,7 +60,7 @@ public class GETPostsTest extends ApiBaseClass {
         PostsCollection response = restWrapper.usingPosts().getInfoByTag(tag);
 
         log.info("Validate response tag as per request!");
-        assertTrue(response.getData().get(0).getTags().contains(tag));
+        assertTrue(response.getData().stream().allMatch(x -> x.getTags().contains(tag)));
 
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();

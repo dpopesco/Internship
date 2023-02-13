@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 @Slf4j
 public class GETCommentsTest extends ApiBaseClass {
@@ -17,7 +18,7 @@ public class GETCommentsTest extends ApiBaseClass {
 
         CommentsCollection response = restWrapper.usingComments().getComments();
 
-        log.info("Validate response limit!");
+        log.info("Validate default response limit!");
         assertEquals(response.getLimit(), 20);
 
         log.info("Validate status code!");
@@ -32,9 +33,7 @@ public class GETCommentsTest extends ApiBaseClass {
         CommentsCollection response = restWrapper.usingComments().getCommentsByPostId(postId);
 
         log.info("Validate response post id as per request!");
-        for (int i = 0; i < response.getData().size(); i++) {
-            assertEquals(response.getData().get(i).getPostId(), postId);
-        }
+        assertTrue(response.getData().stream().allMatch(x -> x.getPostId().equals(postId)));
 
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
@@ -62,9 +61,7 @@ public class GETCommentsTest extends ApiBaseClass {
         CommentsCollection response = restWrapper.usingComments().getCommentsByUserId(userId);
 
         log.info("Validate response user id as per request!");
-        for (int i = 0; i < response.getData().size(); i++) {
-            assertEquals(response.getData().get(i).getOwner().getId(), userId);
-        }
+        response.getData().stream().allMatch(x -> x.getOwner().getId().equals(userId));
 
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();

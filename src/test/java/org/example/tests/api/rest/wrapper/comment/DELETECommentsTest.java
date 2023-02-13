@@ -14,11 +14,9 @@ import static org.testng.Assert.assertNull;
 @Slf4j
 public class DELETECommentsTest extends ApiBaseClass {
     @Test
-    public void deleteComment() {
+    public String deleteComment() {
 
-        log.info("New comment is created!");
         Comment responseCreate = restWrapper.usingComments().createComment(CommentPOST.generateComment());
-        log.info("Created id from response is saved!");
         String commentId = responseCreate.getId();
 
         Comment response = restWrapper.usingComments().deleteComment(commentId);
@@ -29,12 +27,14 @@ public class DELETECommentsTest extends ApiBaseClass {
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
+        return commentId;
     }
 
     @Test
     public void deleteAlreadyDeletedComment() {
 
-        ErrorModel response = restWrapper.usingComments().deleteCommentWithFailure("63e8ed79afe0a1bac5899c46");
+        String deletedComment = deleteComment();
+        ErrorModel response = restWrapper.usingComments().deleteCommentWithFailure(deletedComment);
 
         log.info("Validate comment is already deleted!");
         assertEquals(response.getError(), "RESOURCE_NOT_FOUND");

@@ -14,15 +14,13 @@ import static org.testng.Assert.assertNull;
 @Slf4j
 public class DELETEPostsTest extends ApiBaseClass {
     @Test
-    public void deletePost() {
+    public String deletePost() {
 
-        log.info("New post is created!");
         PostPOST post = PostPOST.generateRandomPost();
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
 
         PostGET response = restWrapper.usingPosts().createPost(post);
 
-        log.info("Created id from response is saved!");
         String createdId = response.getId();
 
         PostPOST responseDelete = restWrapper.usingPosts().deletePost(createdId);
@@ -33,14 +31,15 @@ public class DELETEPostsTest extends ApiBaseClass {
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
+        return createdId;
     }
 
     @Test
     public void deleteAlreadyDeletedPost() {
 
-        String postId = "63e1f94ab6c1a123d203959a";
+        String deletedPost = deletePost();
 
-        ErrorModel responseDelete = restWrapper.usingPosts().deletePostWithFailure(postId);
+        ErrorModel responseDelete = restWrapper.usingPosts().deletePostWithFailure(deletedPost);
 
         log.info("Validate already deleted post is not found!");
         assertEquals(responseDelete.getError(), "RESOURCE_NOT_FOUND");
