@@ -1,4 +1,4 @@
-package org.example.models;
+package org.example.models.user;
 
 import lombok.Getter;
 import lombok.Setter;

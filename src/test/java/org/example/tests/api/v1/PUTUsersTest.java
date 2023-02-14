@@ -4,7 +4,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.example.models.UserLocation;
+import org.example.models.user.UserLocation;
 import org.json.simple.JSONObject;
 import org.testng.annotations.Test;
 

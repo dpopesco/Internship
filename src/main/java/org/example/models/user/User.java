@@ -1,4 +1,4 @@
-package org.example.models;
+package org.example.models.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -29,7 +29,7 @@ public class User {
     @JsonProperty(value = "gender")
     private String gender;
     @JsonProperty(value = "dateOfBirth")
-    private Date dateOfBirth;
+    private String dateOfBirth;
     @JsonProperty(value = "registerDate")
     private Date registerDate;
     @JsonProperty(value = "updatedDate")

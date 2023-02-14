@@ -1,15 +1,18 @@
-package org.example.tests.api.rest.wrapper.user;
+package org.example.tests.api.rest.wrapper;
 
-import io.restassured.response.Response;
+import lombok.extern.slf4j.Slf4j;
+import org.example.utils.PlainTextReporter;
 import org.example.utils.Properties;
 import org.example.utils.TestContext;
 import org.example.wrappers.RestWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.*;
 
+@Slf4j
 @ContextConfiguration(classes = TestContext.class)
+@Listeners(PlainTextReporter.class)
 public abstract class ApiBaseClass extends AbstractTestNGSpringContextTests {
 
     @Autowired
@@ -23,13 +26,23 @@ public abstract class ApiBaseClass extends AbstractTestNGSpringContextTests {
 
     @BeforeClass(alwaysRun = true)
     public void addHeader() {
+        log.info("Entering: " + this.getClass().toString());
+        log.info("Setting in header app-id!");
         restWrapper.addRequestHeader("app-id", properties.getAppId());
     }
 
-    public void logResponse(Response response) {
-        response.getBody().prettyPrint();
-        System.out.println("Status code: " + response.getStatusCode());
-        System.out.println("Header: " + response.getHeader("content-type"));
-        System.out.println("Response time: " + response.getTime());
+    @AfterClass(alwaysRun = true)
+    public void addLogForExitingClassTests() {
+        log.info("Exiting: " + this.getClass().toString());
+    }
+
+    @BeforeMethod
+    public void addBeforeMethodLog() {
+        log.info("Entering test!");
+    }
+
+    @AfterMethod
+    public void addAfterMethodLog() {
+        log.info("Exiting test!");
     }
 }

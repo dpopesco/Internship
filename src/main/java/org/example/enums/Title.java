@@ -11,7 +11,7 @@ public enum Title {
     DR("dr");
     private final String userTitle;
 
-    private Title(String title) {
+    Title(String title) {
         this.userTitle = title;
     }
 }

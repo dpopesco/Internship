@@ -10,7 +10,7 @@ public enum Gender {
 
     private final String userGender;
 
-    private Gender(String type) {
+    Gender(String type) {
         this.userGender = type;
     }
 }

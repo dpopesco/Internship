@@ -1,4 +1,4 @@
-package org.example.models;
+package org.example.models.post;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import java.util.Date;
 
 @Getter
 @Setter
-public abstract class Post {
+public class Post {
     @JsonProperty(value = "id", required = true)
     private String id;
     @JsonProperty(value = "image")
