@@ -12,16 +12,17 @@ import static org.testng.Assert.assertNull;
 
 @Slf4j
 public class DELETEUsersTest extends ApiBaseClass {
+    private String createdId;
 
     @Test
-    public String deleteUser() {
+    public void deleteUser() {
 
         User user = User.generateRandomUser();
-        User response = restWrapper.usingUsers().createUser(user);
+        User response = restWrapper.usingUsers().createItem(user);
 
         String createdId = response.getId();
 
-        User responseDelete = restWrapper.usingUsers().deleteUser(createdId);
+        User responseDelete = restWrapper.usingUsers().deleteItem(createdId);
 
         log.info("Validate user is deleted successfully!");
         assertNull(responseDelete.getFirstName());
@@ -29,15 +30,15 @@ public class DELETEUsersTest extends ApiBaseClass {
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
-        return createdId;
+        this.createdId = createdId;
     }
 
     @Test
     public void deleteAlreadyDeletedUser() {
 
-        String deletedUser = deleteUser();
+        deleteUser();
 
-        ErrorModel response = restWrapper.usingUsers().deleteUserWithFailure(deletedUser);
+        ErrorModel response = restWrapper.usingUsers().deleteItemWithFailure(createdId);
 
         log.info("Validate already deleted user is not found!");
         assertEquals(response.getError(), "RESOURCE_NOT_FOUND");
@@ -50,7 +51,7 @@ public class DELETEUsersTest extends ApiBaseClass {
     @Test
     public void deleteUserWithInvalidId() {
 
-        ErrorModel response = restWrapper.usingUsers().deleteUserWithFailure("9576445");
+        ErrorModel response = restWrapper.usingUsers().deleteItemWithFailure("9576445");
 
         log.info("Validate user with invalid id shows error params not valid!");
         assertEquals(response.getError(), "PARAMS_NOT_VALID");
@@ -63,7 +64,7 @@ public class DELETEUsersTest extends ApiBaseClass {
     @Test
     public void deleteWithoutAuthorization() {
 
-        ErrorModel response = restWrapperWithoutAuth.usingUsers().deleteUserWithFailure("60d0fe4f5311236168a109ca");
+        ErrorModel response = restWrapperWithoutAuth.usingUsers().deleteItemWithFailure("60d0fe4f5311236168a109ca");
 
         log.info("Validate user not deleted without app-id!");
         assertEquals(response.getError(), "APP_ID_MISSING");

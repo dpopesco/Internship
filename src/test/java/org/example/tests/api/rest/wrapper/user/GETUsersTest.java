@@ -19,7 +19,7 @@ public class GETUsersTest extends ApiBaseClass {
 
     @Test
     public void checkItemsCreatedInCurrentEnvironment() {
-        UsersCollection user = restWrapper.usingUsers().usingParams("created=1").getUsers();
+        UsersCollection user = restWrapper.usingUsers().usingParams("created=1").getItems();
 
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
@@ -31,7 +31,7 @@ public class GETUsersTest extends ApiBaseClass {
 
         String id = "60d0fe4f5311236168a109dd";
 
-        User user = restWrapper.usingUsers().getUser(id);
+        User user = restWrapper.usingUsers().getItem(id);
 
         log.info("Validate response id as per request");
         assertEquals(user.getId(), id);
@@ -56,7 +56,7 @@ public class GETUsersTest extends ApiBaseClass {
     @Test(dataProvider = "invalidId")
     public void checkUserInfoProvidingInvalidId(Object id) {
 
-        ErrorModel user = restWrapper.usingUsers().getUserAndExpectError(String.valueOf(id));
+        ErrorModel user = restWrapper.usingUsers().getItemWithFailure(String.valueOf(id));
 
         log.info("Validate params not valid");
         assertEquals(user.getError(), "PARAMS_NOT_VALID");

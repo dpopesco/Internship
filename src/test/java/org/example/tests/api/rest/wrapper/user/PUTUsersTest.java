@@ -25,7 +25,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        User response = restWrapper.usingUsers().updateUser(user, userId);
+        User response = restWrapper.usingUsers().updateItem(userId, user);
 
         log.info("Validate user is updated successfully!");
         assertEquals(response.getFirstName(), user.getFirstName());
@@ -44,7 +44,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        User response = restWrapper.usingUsers().updateUser(user, userId);
+        User response = restWrapper.usingUsers().updateItem(userId, user);
 
         log.info("Validate user's email is not updated!");
         assertNotEquals(response.getEmail(), user.getEmail());
@@ -74,7 +74,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        User response = restWrapper.usingUsers().updateUser(user, userId);
+        User response = restWrapper.usingUsers().updateItem(userId, user);
 
         log.info("Validate location information is updated!");
         assertEquals(response.getLocation().getStreet(), street);
@@ -96,7 +96,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        User response = restWrapper.usingUsers().updateUser(user, userId);
+        User response = restWrapper.usingUsers().updateItem(userId, user);
 
         log.info("Validate user's title is updated!");
         assertEquals(response.getTitle(), user.getTitle());
@@ -127,7 +127,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.info("Validate user's date of birth not updated!");
         log.error("Bug, api accepts to put invalid dateOfBirth");
 
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getDateOfBirth(), "Cast to date failed for value \"" + invalidDate + "\" (type string) at path \"dateOfBirth\"");
@@ -147,7 +147,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         log.info("Validate characters for phone not allowed!");
         log.error("Bug, api accepts to put characters for phone field!");
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getPhone(), "Path `phone` is invalid.");
@@ -172,7 +172,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.info("Validate invalid timezone format not allowed!");
         log.error("Bug, api accepts to put characters for timezone field!");
 
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getLocation().getTimezone(), "Path `timezone` is invalid.");
@@ -193,7 +193,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.error("Bug, api accepts to put invalid gender value!");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getGender(), "`" + gender + "` is not a valid enum value for path `gender`.");
@@ -214,7 +214,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.error("Bug, user can be updated with spaces for mandatory fields!");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
@@ -235,7 +235,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        User response = restWrapper.usingUsers().updateUser(user, userId);
+        User response = restWrapper.usingUsers().updateItem(userId, user);
 
         log.info("Validate empty mandatory fields not allowed!");
         assertEquals(response.getFirstName(), "Edita");
@@ -254,7 +254,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        UserErrorModel response = restWrapperWithoutAuth.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapperWithoutAuth.usingUsers().updateItemWithFailure(userId, user);
 
         log.info("Validate user not updated without app-id!");
         assertEquals(response.getError(), "APP_ID_MISSING");
@@ -275,7 +275,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.error("Bug, api accepts to update firstName bigger than 30 characters!");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getFirstName(), "Path `firstName` (`" + firstName + "`) is longer than the maximum allowed length (30).");
@@ -296,7 +296,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.error("Bug, api accepts to update lastName bigger than 30 characters!");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getLastName(), "Path `lastName` (`" + lastName + "`) is longer than the maximum allowed length (30).");
@@ -316,7 +316,7 @@ public class PUTUsersTest extends ApiBaseClass {
         log.error("Bug, api accepts to update with invalid title!");
 
         String userId = "60d0fe4f5311236168a109cb";
-        UserErrorModel response = restWrapper.usingUsers().updateUserWithFailure(user, userId);
+        UserErrorModel response = restWrapper.usingUsers().updateItemWithFailure(userId, user);
 
         assertEquals(response.getError(), "BODY_NOT_VALID");
         assertEquals(response.getData().getTitle(), "`unknown` is not a valid enum value for path `title`.");
@@ -334,7 +334,7 @@ public class PUTUsersTest extends ApiBaseClass {
 
         String userId = "60d0fe4f5311236168a109cb";
 
-        User response = restWrapper.usingUsers().updateUser(user, userId);
+        User response = restWrapper.usingUsers().updateItem(userId, user);
 
         log.info("Validate autogenerated id remained, instead of the one passed!");
         assertNotEquals(response.getId(), user.getId());

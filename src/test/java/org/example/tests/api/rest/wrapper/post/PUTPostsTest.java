@@ -22,7 +22,7 @@ public class PUTPostsTest extends ApiBaseClass {
 
         PostPOST post = PostPOST.generateRandomPost();
 
-        PostGET response = restWrapper.usingPosts().updatePost(post, postId);
+        PostGET response = restWrapper.usingPosts().updateItem(postId, post);
 
         log.info("Validate post is updated successfully!");
         assertEquals(response.getText(), post.getText());
@@ -41,7 +41,7 @@ public class PUTPostsTest extends ApiBaseClass {
         PostPOST post = PostPOST.generateRandomPost();
         String postId = "63e4ae16d97";
 
-        ErrorModel response = restWrapper.usingPosts().updatePostWithFailure(post, postId);
+        ErrorModel response = restWrapper.usingPosts().updateItemWithFailure(postId, post);
 
         log.info("Validate postId is not valid!");
         assertEquals(response.getError(), "PARAMS_NOT_VALID");
@@ -59,7 +59,7 @@ public class PUTPostsTest extends ApiBaseClass {
         String ownerId = "63e4ae16d97";
         post.setOwnerId(ownerId);
 
-        PostGET response = restWrapper.usingPosts().updatePost(post, postId);
+        PostGET response = restWrapper.usingPosts().updateItem(postId, post);
 
         log.info("Validate post is not updated with owner id!");
         assertNotEquals(response.getUser().getId(), ownerId);
@@ -70,12 +70,12 @@ public class PUTPostsTest extends ApiBaseClass {
         assertEquals(statusCode, SC_OK);
     }
 
-    @Test(description = "bug, status code is 0, instead of 403")
+    @Test(description = "bug, status code is 400, instead of 403")
     public void updatePostWithoutAuthorization() {
 
         PostPOST post = PostPOST.generateRandomPost();
 
-        ErrorModel response = restWrapperWithoutAuth.usingPosts().updatePostWithFailure(post, postId);
+        ErrorModel response = restWrapperWithoutAuth.usingPosts().updateItemWithFailure(postId, post);
 
         log.info("Validate post cannot be updated without app id!");
         assertEquals(response.getError(), "APP_ID_MISSING");

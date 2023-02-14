@@ -31,7 +31,7 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test(dataProvider = "userMandatoryFields")
     public void createUsers(User user) {
 
-        User userResponse = restWrapper.usingUsers().createUser(user);
+        User userResponse = restWrapper.usingUsers().createItem(user);
 
         log.info("Validate user is created successfully!");
         assertEquals(userResponse.getFirstName(), user.getFirstName());
@@ -47,7 +47,7 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUser() {
 
         User user = User.generateRandomUser();
-        User userResponse = restWrapper.usingUsers().createUser(user);
+        User userResponse = restWrapper.usingUsers().createItem(user);
 
         log.info("Validate user is created successfully!");
         assertEquals(userResponse.getFirstName(), user.getFirstName());
@@ -64,7 +64,7 @@ public class POSTUsersTest extends ApiBaseClass {
     public void createNewUserUsingExistingEmail() {
 
         User user = User.generateAlreadyRegisteredUser();
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate email already used error!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -82,7 +82,7 @@ public class POSTUsersTest extends ApiBaseClass {
         User emptyUser = new User(" ", " ", " ");
         emptyUser.setGender(Gender.FEMALE.getUserGender());
         emptyUser.setTitle(Title.MISS.getUserTitle());
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(emptyUser);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(emptyUser);
 
         log.info("Validate spaces for mandatory fields not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -101,7 +101,7 @@ public class POSTUsersTest extends ApiBaseClass {
         User userInvalid = new User("Mariana", "Ricky", "mariana@mail");
         userInvalid.setGender(Gender.FEMALE.getUserGender());
         userInvalid.setTitle(Title.MISS.getUserTitle());
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(userInvalid);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(userInvalid);
 
         log.info("Validate invalid email structure not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -114,7 +114,7 @@ public class POSTUsersTest extends ApiBaseClass {
     @Test
     public void createNewUserWithMissingMandatoryFields() {
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithoutBody();
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithoutBody();
 
         log.info("Validate user isn't created without mandatory fields entered!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -132,7 +132,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         User user = User.generateRandomUser();
         user.setFirstName("<script>alert(\\'H\\')</script>");
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate user is not created when entering xss script for firstName field!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -152,7 +152,7 @@ public class POSTUsersTest extends ApiBaseClass {
         user.setTitle(Title.MISS.getUserTitle());
         user.setGender(Gender.FEMALE.getUserGender());
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate empty mandatory fields not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -170,7 +170,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         User user = new User("Ella", "Miro", "ella@mail.com");
 
-        ErrorModel userResponse = restWrapperWithoutAuth.usingUsers().createUserWithFailure(user);
+        ErrorModel userResponse = restWrapperWithoutAuth.usingUsers().createItemWithFailure(user);
 
         log.info("Validate user not created without app-id!");
         assertEquals(userResponse.getError(), "APP_ID_MISSING");
@@ -186,7 +186,7 @@ public class POSTUsersTest extends ApiBaseClass {
         String firstName = randomAlphabetic(31);
         user.setFirstName(firstName);
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate firstName longer than 30 not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -203,7 +203,7 @@ public class POSTUsersTest extends ApiBaseClass {
         String lastName = randomAlphabetic(31);
         user.setLastName(lastName);
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate lastName longer than 30 not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -222,7 +222,7 @@ public class POSTUsersTest extends ApiBaseClass {
         user.setEmail(email);
 
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate email longer than 50 not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -240,7 +240,7 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = User.generateRandomUser();
         user.setTitle("unknown");
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate wrong title format not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -257,7 +257,7 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = User.generateRandomUser();
         user.setId(randomNumeric(6));
 
-        User userResponse = restWrapper.usingUsers().createUser(user);
+        User userResponse = restWrapper.usingUsers().createItem(user);
 
         log.info("Validate autogenerated id is created, instead of the one passed!");
         assertNotEquals(userResponse.getId(), user.getId());
@@ -273,7 +273,7 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = User.generateRandomUser();
         user.setPhone(randomAlphabetic(9));
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate characters for phone not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -300,7 +300,7 @@ public class POSTUsersTest extends ApiBaseClass {
         User user = User.generateRandomUser();
         user.setDateOfBirth(invalidDate);
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate invalid date of birth not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -316,7 +316,7 @@ public class POSTUsersTest extends ApiBaseClass {
 
         User userWithLocation = User.generateUserWithLocation();
 
-        User userResponse = restWrapper.usingUsers().createUser(userWithLocation);
+        User userResponse = restWrapper.usingUsers().createItem(userWithLocation);
 
         log.info("Validate location information created!");
         assertEquals(userResponse.getLocation().getStreet(), userWithLocation.getLocation().getStreet());
@@ -338,7 +338,7 @@ public class POSTUsersTest extends ApiBaseClass {
         UserLocation location = userL.getLocation();
         location.setTimezone(timezone);
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(userL);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(userL);
 
         log.info("Validate invalid timezone format not allowed!");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");
@@ -356,7 +356,7 @@ public class POSTUsersTest extends ApiBaseClass {
         String gender = randomAlphanumeric(4);
         user.setGender(gender);
 
-        UserErrorModel userResponse = restWrapper.usingUsers().createUserWithFailure(user);
+        UserErrorModel userResponse = restWrapper.usingUsers().createItemWithFailure(user);
 
         log.info("Validate invalid gender format not allowed");
         assertEquals(userResponse.getError(), "BODY_NOT_VALID");

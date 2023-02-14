@@ -8,13 +8,9 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 
 @Getter
 @Setter
-public class CommentPOST {
-    @JsonProperty(value = "message", required = true)
-    private String message;
+public class CommentPOST extends Comment {
     @JsonProperty(value = "owner", required = true)
     private String ownerId;
-    @JsonProperty(value = "post", required = true)
-    private String postId;
 
     public CommentPOST() {
     }

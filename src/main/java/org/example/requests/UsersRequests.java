@@ -1,6 +1,7 @@
 package org.example.requests;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.exceptions.ConversionJsonToModelException;
 import org.example.models.error.ErrorModel;
 import org.example.models.error.UserErrorModel;
 import org.example.models.user.User;
@@ -10,7 +11,7 @@ import org.example.wrappers.RestWrapper;
 import org.springframework.http.HttpMethod;
 
 @Slf4j
-public class UsersRequests extends ModelRequest<UsersRequests> {
+public class UsersRequests extends ModelRequest<UsersRequests> implements APIContract<User, UsersCollection, ErrorModel> {
     public UsersRequests(RestWrapper restWrapper) {
         super(restWrapper);
     }
@@ -18,62 +19,70 @@ public class UsersRequests extends ModelRequest<UsersRequests> {
     private final String path = "user/{id}";
     private final String userCreate = "/user/create";
 
-    public User getUser(String userId) {
-
-        RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, path, userId);
+    @Override
+    public User getItem(String itemId) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, path, itemId);
         return restWrapper.processModel(User.class, request);
     }
 
-    public ErrorModel getUserAndExpectError(String invalidId) {
-
-        RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, path, invalidId);
+    @Override
+    public ErrorModel getItemWithFailure(String itemId) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, path, itemId);
         return restWrapper.processModel(ErrorModel.class, request);
     }
 
-    public ErrorModel getUsersWithParamsAndExpectError() {
-        RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, "/user?{parameters}", this.getParameters());
-        return restWrapper.processModel(ErrorModel.class, request);
-    }
-
-    public UsersCollection getUsers() {
-
+    @Override
+    public UsersCollection getItems() throws ConversionJsonToModelException {
         log.info("Entering getUsers method where request is built and response is converted to model!");
         RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, "/user?{parameters}", this.getParameters());
         return restWrapper.processModel(UsersCollection.class, request);
     }
 
-    public User createUser(User user) {
-        RestRequest request = RestRequest.requestWithBody(HttpMethod.POST, user, userCreate);
+    @Override
+    public ErrorModel getItemsWithFailure() throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.simpleRequest(HttpMethod.GET, "/user?{parameters}", this.getParameters());
+        return restWrapper.processModel(ErrorModel.class, request);
+    }
+
+    @Override
+    public User createItem(User item) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.requestWithBody(HttpMethod.POST, item, userCreate);
         return restWrapper.processModel(User.class, request);
     }
 
-    public UserErrorModel createUserWithFailure(User user) {
-        RestRequest request = RestRequest.requestWithBody(HttpMethod.POST, user, userCreate);
+    @Override
+    public UserErrorModel createItemWithFailure(User item) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.requestWithBody(HttpMethod.POST, item, userCreate);
         return restWrapper.processModel(UserErrorModel.class, request);
     }
 
-    public UserErrorModel createUserWithoutBody() {
+    @Override
+    public UserErrorModel createItemWithoutBody() throws ConversionJsonToModelException {
         RestRequest request = RestRequest.simpleRequest(HttpMethod.POST, userCreate);
         return restWrapper.processModel(UserErrorModel.class, request);
     }
 
-    public User updateUser(User user, String userId) {
-        RestRequest request = RestRequest.requestWithBody(HttpMethod.PUT, user, path, userId);
+    @Override
+    public User updateItem(String itemId, User updatedItem) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.requestWithBody(HttpMethod.PUT, updatedItem, path, itemId);
         return restWrapper.processModel(User.class, request);
     }
 
-    public UserErrorModel updateUserWithFailure(User user, String userId) {
-        RestRequest request = RestRequest.requestWithBody(HttpMethod.PUT, user, path, userId);
+    @Override
+    public UserErrorModel updateItemWithFailure(String itemId, User updatedItem) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.requestWithBody(HttpMethod.PUT, updatedItem, path, itemId);
         return restWrapper.processModel(UserErrorModel.class, request);
     }
 
-    public User deleteUser(String userId) {
-        RestRequest request = RestRequest.simpleRequest(HttpMethod.DELETE, path, userId);
+    @Override
+    public User deleteItem(String itemId) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.simpleRequest(HttpMethod.DELETE, path, itemId);
         return restWrapper.processModel(User.class, request);
     }
 
-    public ErrorModel deleteUserWithFailure(String userId) {
-        RestRequest request = RestRequest.simpleRequest(HttpMethod.DELETE, path, userId);
+    @Override
+    public ErrorModel deleteItemWithFailure(String itemId) throws ConversionJsonToModelException {
+        RestRequest request = RestRequest.simpleRequest(HttpMethod.DELETE, path, itemId);
         return restWrapper.processModel(ErrorModel.class, request);
     }
 }

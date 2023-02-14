@@ -13,13 +13,15 @@ import static org.testng.Assert.assertNull;
 
 @Slf4j
 public class DELETECommentsTest extends ApiBaseClass {
-    @Test
-    public String deleteComment() {
+    private String createdId;
 
-        Comment responseCreate = restWrapper.usingComments().createComment(CommentPOST.generateComment());
+    @Test
+    public void deleteComment() {
+
+        Comment responseCreate = restWrapper.usingComments().createItem(CommentPOST.generateComment());
         String commentId = responseCreate.getId();
 
-        Comment response = restWrapper.usingComments().deleteComment(commentId);
+        Comment response = restWrapper.usingComments().deleteItem(commentId);
 
         log.info("Validate comment is deleted successfully!");
         assertNull(response.getMessage());
@@ -27,14 +29,14 @@ public class DELETECommentsTest extends ApiBaseClass {
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
-        return commentId;
+        this.createdId = commentId;
     }
 
     @Test
     public void deleteAlreadyDeletedComment() {
 
-        String deletedComment = deleteComment();
-        ErrorModel response = restWrapper.usingComments().deleteCommentWithFailure(deletedComment);
+        deleteComment();
+        ErrorModel response = restWrapper.usingComments().deleteItemWithFailure(createdId);
 
         log.info("Validate comment is already deleted!");
         assertEquals(response.getError(), "RESOURCE_NOT_FOUND");
@@ -47,7 +49,7 @@ public class DELETECommentsTest extends ApiBaseClass {
     @Test
     public void deleteCommentWithoutAuthorization() {
 
-        ErrorModel response = restWrapperWithoutAuth.usingComments().deleteCommentWithFailure("63e8ed79afe");
+        ErrorModel response = restWrapperWithoutAuth.usingComments().deleteItemWithFailure("63e8ed79afe");
 
         log.info("Validate comment cannot be deleted without authorization!");
         assertEquals(response.getError(), "APP_ID_MISSING");

@@ -16,7 +16,7 @@ public class GETCommentsTest extends ApiBaseClass {
     @Test
     public void getCommentsList() {
 
-        CommentsCollection response = restWrapper.usingComments().getComments();
+        CommentsCollection response = restWrapper.usingComments().getItems();
 
         log.info("Validate default response limit!");
         assertEquals(response.getLimit(), 20);

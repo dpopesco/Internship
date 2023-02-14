@@ -13,17 +13,19 @@ import static org.testng.Assert.assertNull;
 
 @Slf4j
 public class DELETEPostsTest extends ApiBaseClass {
+    private String createdId;
+
     @Test
-    public String deletePost() {
+    public void deletePost() {
 
         PostPOST post = PostPOST.generateRandomPost();
         post.setOwnerId("63e0d8d3c2fbb95b9f900a95");
 
-        PostGET response = restWrapper.usingPosts().createPost(post);
+        PostGET response = restWrapper.usingPosts().createItem(post);
 
         String createdId = response.getId();
 
-        PostPOST responseDelete = restWrapper.usingPosts().deletePost(createdId);
+        PostPOST responseDelete = restWrapper.usingPosts().deleteItem(createdId);
 
         log.info("Validate post is deleted successfully!");
         assertNull(responseDelete.getLink());
@@ -31,15 +33,15 @@ public class DELETEPostsTest extends ApiBaseClass {
         log.info("Validate status code!");
         int statusCode = restWrapper.getStatusCode();
         assertEquals(statusCode, SC_OK);
-        return createdId;
+        this.createdId = createdId;
     }
 
     @Test
     public void deleteAlreadyDeletedPost() {
 
-        String deletedPost = deletePost();
+        deletePost();
 
-        ErrorModel responseDelete = restWrapper.usingPosts().deletePostWithFailure(deletedPost);
+        ErrorModel responseDelete = restWrapper.usingPosts().deleteItemWithFailure(createdId);
 
         log.info("Validate already deleted post is not found!");
         assertEquals(responseDelete.getError(), "RESOURCE_NOT_FOUND");
@@ -54,7 +56,7 @@ public class DELETEPostsTest extends ApiBaseClass {
 
         String postId = "63e1f94a";
 
-        ErrorModel responseDelete = restWrapper.usingPosts().deletePostWithFailure(postId);
+        ErrorModel responseDelete = restWrapper.usingPosts().deleteItemWithFailure(postId);
 
         log.info("Validate post is not deleted because of invalid postId!");
         assertEquals(responseDelete.getError(), "PARAMS_NOT_VALID");
@@ -69,7 +71,7 @@ public class DELETEPostsTest extends ApiBaseClass {
 
         String postId = "63e1f94ab6c1a123d203959a";
 
-        ErrorModel responseDelete = restWrapperWithoutAuth.usingPosts().deletePostWithFailure(postId);
+        ErrorModel responseDelete = restWrapperWithoutAuth.usingPosts().deleteItemWithFailure(postId);
 
         log.info("Validate post is not deleted as app id is missing!");
         assertEquals(responseDelete.getError(), "APP_ID_MISSING");
